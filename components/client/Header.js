@@ -54,40 +54,55 @@ export default function Header() {
           </nav>
 
           {/* Language Switcher */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => changeLanguage('en')}
-              className={`px-2 py-1 text-xs rounded ${
-                lang === 'en' 
-                  ? 'bg-gray-900 text-white' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+          <div className="flex items-center">
+            {/* Desktop: Buttons */}
+            <div className="hidden sm:flex items-center gap-2">
+              <button
+                onClick={() => changeLanguage('en')}
+                className={`px-2 py-1 text-xs rounded ${
+                  lang === 'en' 
+                    ? 'bg-gray-900 text-white' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+                suppressHydrationWarning
+              >
+                EN
+              </button>
+              <button
+                onClick={() => changeLanguage('fr')}
+                className={`px-2 py-1 text-xs rounded ${
+                  lang === 'fr' 
+                    ? 'bg-gray-900 text-white' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+                suppressHydrationWarning
+              >
+                FR
+              </button>
+              <button
+                onClick={() => changeLanguage('ar')}
+                className={`px-2 py-1 text-xs rounded ${
+                  lang === 'ar' 
+                    ? 'bg-gray-900 text-white' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+                suppressHydrationWarning
+              >
+                AR
+              </button>
+            </div>
+
+            {/* Mobile: Dropdown */}
+            <select
+              value={lang}
+              onChange={(e) => changeLanguage(e.target.value)}
+              className="sm:hidden px-2 py-1 text-xs rounded bg-gray-900 text-white border-none focus:outline-none focus:ring-2 focus:ring-gray-900"
               suppressHydrationWarning
             >
-              EN
-            </button>
-            <button
-              onClick={() => changeLanguage('fr')}
-              className={`px-2 py-1 text-xs rounded ${
-                lang === 'fr' 
-                  ? 'bg-gray-900 text-white' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-              suppressHydrationWarning
-            >
-              FR
-            </button>
-            <button
-              onClick={() => changeLanguage('ar')}
-              className={`px-2 py-1 text-xs rounded ${
-                lang === 'ar' 
-                  ? 'bg-gray-900 text-white' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-              suppressHydrationWarning
-            >
-              AR
-            </button>
+              <option value="en">EN</option>
+              <option value="fr">FR</option>
+              <option value="ar">AR</option>
+            </select>
           </div>
         </div>
       </div>
