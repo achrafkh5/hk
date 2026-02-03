@@ -1,0 +1,86 @@
+import { NextResponse } from 'next/server';
+import { getDb } from '@/lib/mongodb';
+
+export async function GET() {
+  try {
+    const db = await getDb();
+    
+    // Get total orders count
+    const totalOrders = await db.collection('orders').countDocuments();
+    
+    // Get total revenue (sum of all order totals)
+    const revenueResult = await db.collection('orders').aggregate([
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$total' },
+        },
+      },
+    ]).toArray();
+    const totalRevenue = revenueResult[0]?.total || 0;
+    
+    // Get today's orders count
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const todayOrders = await db.collection('orders').countDocuments({
+      createdAt: {
+        $gte: today,
+        $lt: tomorrow,
+      },
+    });
+    
+    // Get orders per day for the last 14 days
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    fourteenDaysAgo.setHours(0, 0, 0, 0);
+    
+    const ordersPerDayResult = await db.collection('orders').aggregate([
+      {
+        $match: {
+          createdAt: { $gte: fourteenDaysAgo },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+    ]).toArray();
+    
+    // Fill in missing days with zero counts
+    const ordersPerDay = [];
+    const currentDate = new Date(fourteenDaysAgo);
+    
+    while (currentDate < tomorrow) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      const found = ordersPerDayResult.find(item => item._id === dateStr);
+      ordersPerDay.push({
+        date: dateStr,
+        count: found?.count || 0,
+      });
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return NextResponse.json({
+      totalOrders,
+      totalRevenue,
+      todayOrders,
+      ordersPerDay,
+    });
+  } catch (error) {
+    console.error('Error fetching statistics:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch statistics' },
+      { status: 500 }
+    );
+  }
+}
