@@ -1,6 +1,8 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 import Link from 'next/link';
 import {
   Box,
@@ -13,6 +15,7 @@ import {
   Drawer,
   useMediaQuery,
   useTheme,
+  Button,
 } from '@mui/material';
 
 const SIDEBAR_WIDTH = 240;
@@ -26,6 +29,7 @@ const navItems = [
 ];
 
 export default function Sidebar({ mobileOpen, onMobileClose }) {
+  const router = useRouter();
   const pathname = usePathname();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -35,6 +39,19 @@ export default function Sidebar({ mobileOpen, onMobileClose }) {
       return pathname === '/admin';
     }
     return pathname.startsWith(href);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut({ 
+        redirect: false,
+        callbackUrl: '/login'
+      });
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      router.push('/login');
+    }
   };
 
   const sidebarContent = (
@@ -100,8 +117,18 @@ export default function Sidebar({ mobileOpen, onMobileClose }) {
 
       {/* Footer */}
       <Divider />
-      <Box sx={{ px: 3, py: 2 }}>
-        <Typography variant="caption" color="text.secondary">
+      <Box sx={{ px: 2, py: 2 }}>
+        <Button
+          fullWidth
+          variant="outlined"
+          color="error"
+          size="small"
+          onClick={handleLogout}
+          sx={{ mb: 1 }}
+        >
+          Log Out
+        </Button>
+        <Typography variant="caption" color="text.secondary" display="block" textAlign="center">
           © 2026 HK LUX
         </Typography>
       </Box>

@@ -113,16 +113,6 @@ export default function LoginPage() {
               {loading ? <CircularProgress size={24} /> : 'Sign In'}
             </Button>
           </form>
-
-          <Typography variant="body2" color="text.secondary" textAlign="center">
-            Don&apos;t have an account?{' '}
-            <Link
-              href="/signup"
-              style={{ color: '#3f51b5', textDecoration: 'none' }}
-            >
-              Sign up
-            </Link>
-          </Typography>
         </Paper>
       </Box>
     </ThemeProvider>
