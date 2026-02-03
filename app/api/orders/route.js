@@ -36,7 +36,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { items, total, customer } = body;
+    const { items, subtotal, deliveryPrice, deliveryType, total, customer } = body;
 
     // Validate required fields
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -77,6 +77,9 @@ export async function POST(request) {
         qty: parseInt(item.qty),
         color: item.color || null,
       })),
+      subtotal: parseFloat(subtotal || total),
+      deliveryPrice: parseFloat(deliveryPrice || 0),
+      deliveryType: deliveryType || 'domicile',
       total: parseFloat(total),
       customer: {
         name: customer.name,

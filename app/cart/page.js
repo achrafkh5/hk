@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/lib/LanguageContext';
@@ -11,12 +10,7 @@ import Footer from '@/components/client/Footer';
 export default function CartPage() {
   const { lang, t } = useLanguage();
   const { cart, updateQuantity, removeFromCart, getCartTotal } = useCart();
-  const [mounted, setMounted] = useState(false);
-
-  // Only render cart content after hydration to avoid mismatch
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const isClient = typeof window !== 'undefined';
 
   // Get product name based on current language
   function getProductName(item) {
@@ -51,8 +45,8 @@ export default function CartPage() {
 
   const cartTotal = getCartTotal();
 
-  // Show loading state until mounted to avoid hydration mismatch
-  if (!mounted) {
+  // Show loading state on server to avoid hydration mismatch
+  if (!isClient) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -168,6 +162,7 @@ export default function CartPage() {
                         <button
                           onClick={() => removeFromCart(item.productId, item.color)}
                           className="text-sm text-gray-500 hover:text-gray-700"
+                          suppressHydrationWarning
                         >
                           {t('remove')}
                         </button>
@@ -193,6 +188,14 @@ export default function CartPage() {
                       {formatPrice(cartTotal)}
                     </span>
                   </div>
+                  
+                  {/* Delivery info message */}
+                  <div className="py-2 border-t border-gray-200">
+                    <p className="text-xs text-gray-500 text-center" suppressHydrationWarning>
+                      {t('deliveryAddedAtCheckout')}
+                    </p>
+                  </div>
+                  
                   <div className="flex justify-between py-2 border-t border-gray-200">
                     <span className="text-gray-900 font-medium" suppressHydrationWarning>{t('total')}</span>
                     <span className="text-gray-900 font-semibold text-lg">

@@ -9,6 +9,59 @@ import Header from '@/components/client/Header';
 import Footer from '@/components/client/Footer';
 import algerianWilayas from 'algeria-wilayas';
 
+const DELIVERY_PRICES = {
+  Adrar: { domicile: 1400, stopdesk: 970 },
+  Chlef: { domicile: 750, stopdesk: 520 },
+  Laghouat: { domicile: 950, stopdesk: 670 },
+  "Oum El Bouaghi": { domicile: 800, stopdesk: 520 },
+  Batna: { domicile: 800, stopdesk: 520 },
+  Bejaia: { domicile: 800, stopdesk: 520 },
+  Biskra: { domicile: 950, stopdesk: 670 },
+  Bechar: { domicile: 1100, stopdesk: 720 },
+  Blida: { domicile: 400, stopdesk: 370 },
+  Bouira: { domicile: 750, stopdesk: 520 },
+  Tamanrasset: { domicile: 1600, stopdesk: 1120 },
+  Tebessa: { domicile: 850, stopdesk: 520 },
+  Tlemcen: { domicile: 850, stopdesk: 570 },
+  Tiaret: { domicile: 800, stopdesk: 520 },
+  "Tizi Ouzou": { domicile: 750, stopdesk: 520 },
+  Alger: { domicile: 500, stopdesk: 420 },
+  Djelfa: { domicile: 950, stopdesk: 670 },
+  Jijel: { domicile: 800, stopdesk: 520 },
+  Setif: { domicile: 750, stopdesk: 520 },
+  Saida: { domicile: 800, stopdesk: 570 },
+  Skikda: { domicile: 800, stopdesk: 520 },
+  "Sidi Bel Abbes": { domicile: 800, stopdesk: 520 },
+  Annaba: { domicile: 800, stopdesk: 520 },
+  Guelma: { domicile: 800, stopdesk: 520 },
+  Constantine: { domicile: 800, stopdesk: 520 },
+  Medea: { domicile: 750, stopdesk: 520 },
+  Mostaganem: { domicile: 800, stopdesk: 520 },
+  "M'Sila": { domicile: 850, stopdesk: 570 },
+  Mascara: { domicile: 800, stopdesk: 520 },
+  Ouargla: { domicile: 950, stopdesk: 670 },
+  Oran: { domicile: 800, stopdesk: 520 },
+  "El Bayadh": { domicile: 1100, stopdesk: 670 },
+  Illizi: { domicile: 0, stopdesk: 0 },
+  "Bordj Bou Arreridj": { domicile: 750, stopdesk: 520 },
+  Boumerdes: { domicile: 750, stopdesk: 520 },
+  "El Tarf": { domicile: 800, stopdesk: 520 },
+  Tindouf: { domicile: 0, stopdesk: 0 },
+  Tissemsilt: { domicile: 800, stopdesk: 0 },
+  "El Oued": { domicile: 950, stopdesk: 670 },
+  Khenchela: { domicile: 800, stopdesk: 0 },
+  "Souk Ahras": { domicile: 800, stopdesk: 520 },
+  Tipaza: { domicile: 750, stopdesk: 520 },
+  Mila: { domicile: 800, stopdesk: 520 },
+  "Ain Defla": { domicile: 750, stopdesk: 520 },
+  Naama: { domicile: 1100, stopdesk: 670 },
+  "Ain Temouchent": { domicile: 800, stopdesk: 520 },
+  Ghardaia: { domicile: 950, stopdesk: 670 },
+  Relizane: { domicile: 800, stopdesk: 520 },
+  Timimoun: { domicile: 1400, stopdesk: 0 },
+  "Bordj Badji Mokhtar": { domicile: 0, stopdesk: 0 }
+};
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { lang, t } = useLanguage();
@@ -20,11 +73,13 @@ export default function CheckoutPage() {
     wilaya: '',
     daira: '',
     commune: '',
+    deliveryType: 'domicile',
   });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [dairas, setDairas] = useState([]);
   const [communes, setCommunes] = useState([]);
+  const [deliveryPrice, setDeliveryPrice] = useState(0);
 
   // Redirect to cart if empty
   useEffect(() => {
@@ -32,6 +87,28 @@ export default function CheckoutPage() {
       router.push('/cart');
     }
   }, [cart, router]);
+
+  // Calculate delivery price when wilaya or delivery type changes
+  useEffect(() => {
+    if (formData.wilaya && formData.deliveryType) {
+      const wilayaName = algerianWilayas.getWilayaName(formData.wilaya, 'ascii');
+      const prices = DELIVERY_PRICES[wilayaName];
+      
+      if (prices) {
+        const price = prices[formData.deliveryType];
+        setDeliveryPrice(price);
+        
+        // Clear error if delivery is now available
+        if (price > 0) {
+          setError('');
+        }
+      } else {
+        setDeliveryPrice(0);
+      }
+    } else {
+      setDeliveryPrice(0);
+    }
+  }, [formData.wilaya, formData.deliveryType]);
 
   // Get product name based on current language
   function getProductName(item) {
@@ -98,6 +175,10 @@ export default function CheckoutPage() {
       setError(t('communeRequired') || 'Commune is required');
       return;
     }
+    if (deliveryPrice === 0) {
+      setError('Delivery not available for selected wilaya and delivery type');
+      return;
+    }
 
     setSubmitting(true);
     setError('');
@@ -115,7 +196,10 @@ export default function CheckoutPage() {
         qty: item.qty,
         color: item.color || null,
       })),
-      total: getCartTotal(),
+      subtotal: getCartTotal(),
+      deliveryPrice: deliveryPrice,
+      deliveryType: formData.deliveryType,
+      total: getCartTotal() + deliveryPrice,
       customer: {
         name: formData.name.trim(),
         phone: formData.phone.trim(),
@@ -220,7 +304,7 @@ export default function CheckoutPage() {
                     className="block text-sm text-gray-700 mb-1"
                     suppressHydrationWarning
                   >
-                    {t('wilaya') || 'Wilaya'} *
+                    {t('wilaya')} *
                   </label>
                   <select
                     id="wilaya"
@@ -229,7 +313,7 @@ export default function CheckoutPage() {
                     className="w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:border-gray-500"
                     required
                   >
-                    <option value="">{t('selectWilaya') || 'Select Wilaya'}</option>
+                    <option value="">{t('selectWilaya')}</option>
                     {algerianWilayas.getAllWilayas().map((wilaya) => {
                       const languageKey = lang === 'ar' ? 'arabic' : 'ascii';
                       return (
@@ -247,7 +331,7 @@ export default function CheckoutPage() {
                     className="block text-sm text-gray-700 mb-1"
                     suppressHydrationWarning
                   >
-                    {t('daira') || 'Daira'} *
+                    {t('daira')} *
                   </label>
                   <select
                     id="daira"
@@ -257,7 +341,7 @@ export default function CheckoutPage() {
                     required
                     disabled={!formData.wilaya}
                   >
-                    <option value="">{t('selectDaira') || 'Select Daira'}</option>
+                    <option value="">{t('selectDaira')}</option>
                     {dairas.map((daira) => {
                       const languageKey = lang === 'ar' ? 'arabic' : 'ascii';
                       return (
@@ -275,7 +359,7 @@ export default function CheckoutPage() {
                     className="block text-sm text-gray-700 mb-1"
                     suppressHydrationWarning
                   >
-                    {t('commune') || 'Commune'} *
+                    {t('commune')} *
                   </label>
                   <select
                     id="commune"
@@ -285,7 +369,7 @@ export default function CheckoutPage() {
                     required
                     disabled={!formData.daira}
                   >
-                    <option value="">{t('selectCommune') || 'Select Commune'}</option>
+                    <option value="">{t('selectCommune')}</option>
                     {communes.map((commune) => {
                       const communeName = lang === 'ar' ? commune.commune_name : commune.commune_name_ascii;
                       return (
@@ -295,6 +379,98 @@ export default function CheckoutPage() {
                       );
                     })}
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-gray-700 mb-2" suppressHydrationWarning>
+                    {t('deliveryType')} *
+                  </label>
+                  <div className="space-y-2">
+                    <label className="flex items-center space-x-3 p-3 border border-gray-300 rounded cursor-pointer hover:bg-gray-50">
+                      <input
+                        type="radio"
+                        name="deliveryType"
+                        value="domicile"
+                        checked={formData.deliveryType === 'domicile'}
+                        onChange={(e) => handleInputChange('deliveryType', e.target.value)}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm text-gray-900" suppressHydrationWarning>{t('homeDelivery')}</span>
+                    </label>
+                    <label className="flex items-center space-x-3 p-3 border border-gray-300 rounded cursor-pointer hover:bg-gray-50">
+                      <input
+                        type="radio"
+                        name="deliveryType"
+                        value="stopdesk"
+                        checked={formData.deliveryType === 'stopdesk'}
+                        onChange={(e) => handleInputChange('deliveryType', e.target.value)}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm text-gray-900" suppressHydrationWarning>{t('stopDesk')}</span>
+                    </label>
+                  </div>
+                  {deliveryPrice === 0 && formData.wilaya && (
+                    <p className="text-red-600 text-sm mt-2">
+                      ⚠️ Delivery not available for this option
+                    </p>
+                  )}
+                </div>
+
+                {/* Order Summary - Mobile Only (before Place Order button) */}
+                <div className="lg:hidden">
+                  <h2 className="text-lg font-medium text-gray-900 mb-4" suppressHydrationWarning>
+                    {t('orderSummary')}
+                  </h2>
+
+                  <div className="bg-gray-50 p-4 border border-gray-200">
+                    {/* Items */}
+                    <div className="space-y-3 mb-4">
+                      {cart.map((item, index) => (
+                        <div
+                          key={`${item.productId}-${item.color || 'no-color'}-${index}`}
+                          className="text-sm"
+                        >
+                          <div className="flex justify-between">
+                            <span className="text-gray-700">
+                              {getProductName(item)} × {item.qty}
+                            </span>
+                            <span className="text-gray-900">
+                              {formatPrice(item.price * item.qty)}
+                            </span>
+                          </div>
+                          {item.color && (
+                            <span className="text-gray-500 text-xs">
+                              {t('color')}: {getColorName(item.color)}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Divider */}
+                    <div className="border-t border-gray-200 pt-4">
+                      <div className="flex justify-between mb-2">
+                        <span className="text-gray-700" suppressHydrationWarning>{t('subtotal')}</span>
+                        <span className="text-gray-900">{formatPrice(cartTotal)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-700" suppressHydrationWarning>{t('delivery')}</span>
+                        <span className="text-gray-900">
+                          {deliveryPrice > 0 ? formatPrice(deliveryPrice) : '-'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Total */}
+                    <div className="border-t border-gray-200 mt-4 pt-4">
+                      <div className="flex justify-between">
+                        <span className="text-gray-900 font-medium" suppressHydrationWarning>{t('total')}</span>
+                        <span className="text-gray-900 font-semibold text-lg">
+                          {formatPrice(cartTotal + deliveryPrice)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <button
@@ -314,8 +490,8 @@ export default function CheckoutPage() {
               </form>
             </div>
 
-            {/* Order Summary */}
-            <div>
+            {/* Order Summary - Desktop Only */}
+            <div className="hidden lg:block">
               <h2 className="text-lg font-medium text-gray-900 mb-4" suppressHydrationWarning>
                 {t('orderSummary')}
               </h2>
@@ -347,9 +523,15 @@ export default function CheckoutPage() {
 
                 {/* Divider */}
                 <div className="border-t border-gray-200 pt-4">
-                  <div className="flex justify-between">
+                  <div className="flex justify-between mb-2">
                     <span className="text-gray-700" suppressHydrationWarning>{t('subtotal')}</span>
                     <span className="text-gray-900">{formatPrice(cartTotal)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-700" suppressHydrationWarning>{t('delivery')}</span>
+                    <span className="text-gray-900">
+                      {deliveryPrice > 0 ? formatPrice(deliveryPrice) : '-'}
+                    </span>
                   </div>
                 </div>
 
@@ -358,7 +540,7 @@ export default function CheckoutPage() {
                   <div className="flex justify-between">
                     <span className="text-gray-900 font-medium" suppressHydrationWarning>{t('total')}</span>
                     <span className="text-gray-900 font-semibold text-lg">
-                      {formatPrice(cartTotal)}
+                      {formatPrice(cartTotal + deliveryPrice)}
                     </span>
                   </div>
                 </div>
