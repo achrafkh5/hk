@@ -272,7 +272,16 @@ export default function OrdersPage() {
                   {selectedOrder.customer?.name || '-'}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {selectedOrder.customer?.email || '-'}
+                  {selectedOrder.customer?.phone || '-'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  {selectedOrder.customer?.wilaya && (
+                    <>
+                      {selectedOrder.customer.wilaya}
+                      {selectedOrder.customer?.daira && `, ${selectedOrder.customer.daira}`}
+                      {selectedOrder.customer?.commune && `, ${selectedOrder.customer.commune}`}
+                    </>
+                  )}
                 </Typography>
               </Box>
 

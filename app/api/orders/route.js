@@ -46,9 +46,23 @@ export async function POST(request) {
       );
     }
 
-    if (!customer?.name || !customer?.email) {
+    if (!customer?.name) {
       return NextResponse.json(
-        { error: 'Customer name and email are required' },
+        { error: 'Customer name is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!customer?.phone) {
+      return NextResponse.json(
+        { error: 'Customer phone is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!customer?.wilaya || !customer?.daira || !customer?.commune) {
+      return NextResponse.json(
+        { error: 'Customer location (wilaya, daira, commune) is required' },
         { status: 400 }
       );
     }
@@ -65,9 +79,10 @@ export async function POST(request) {
       total: parseFloat(total),
       customer: {
         name: customer.name,
-        email: customer.email,
-        phone: customer.phone || '',
-        address: customer.address || '',
+        phone: customer.phone,
+        wilaya: customer.wilaya,
+        daira: customer.daira,
+        commune: customer.commune,
       },
       status: 'pending',
       createdAt: new Date(),
