@@ -56,7 +56,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }) {
             letterSpacing: '-0.5px',
           }}
         >
-          LUX Admin
+          HK LUX Admin
         </Typography>
       </Box>
 
@@ -102,7 +102,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }) {
       <Divider />
       <Box sx={{ px: 3, py: 2 }}>
         <Typography variant="caption" color="text.secondary">
-          © 2026 LUX
+          © 2026 HK LUX
         </Typography>
       </Box>
     </Box>

@@ -570,7 +570,6 @@ export default function ProductsPage() {
         onClose={handleCloseDialog}
         maxWidth="md"
         fullWidth
-        fullScreen={{ xs: true, sm: false }}
       >
         <DialogTitle>
           {selectedProduct ? 'Edit Product' : 'Add Product'}

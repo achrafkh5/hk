@@ -387,7 +387,6 @@ export default function CategoriesPage() {
         onClose={handleCloseDialog}
         maxWidth="sm"
         fullWidth
-        fullScreen={{ xs: true, sm: false }}
       >
         <DialogTitle>
           {selectedCategory ? 'Edit Category' : 'Add Category'}

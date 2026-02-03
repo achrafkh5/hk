@@ -71,6 +71,13 @@ function shortenId(id) {
   return id.slice(-8).toUpperCase();
 }
 
+// Get product name - handle both string and object (multilingual)
+function getProductName(name) {
+  if (!name) return '-';
+  if (typeof name === 'string') return name;
+  return name.en || name.fr || name.ar || '-';
+}
+
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -255,7 +262,6 @@ export default function OrdersPage() {
         onClose={handleCloseDialog}
         maxWidth="sm"
         fullWidth
-        fullScreen={{ xs: true, sm: false }}
       >
         <DialogTitle>
           Order #{shortenId(selectedOrder?._id)}
@@ -297,6 +303,7 @@ export default function OrdersPage() {
                     <TableHead>
                       <TableRow>
                         <TableCell>Product</TableCell>
+                        <TableCell>Color</TableCell>
                         <TableCell align="right">Qty</TableCell>
                         <TableCell align="right">Price</TableCell>
                       </TableRow>
@@ -304,7 +311,18 @@ export default function OrdersPage() {
                     <TableBody>
                       {selectedOrder.items?.map((item, index) => (
                         <TableRow key={index}>
-                          <TableCell>{item.name || '-'}</TableCell>
+                          <TableCell>{getProductName(item.name)}</TableCell>
+                          <TableCell>
+                            {item.color ? (
+                              <Chip 
+                                label={item.color} 
+                                size="small" 
+                                variant="outlined"
+                              />
+                            ) : (
+                              '-'
+                            )}
+                          </TableCell>
                           <TableCell align="right">{item.qty}</TableCell>
                           <TableCell align="right">
                             {formatPrice(item.price * item.qty)}

@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "LUX - Quality Products",
+  title: "HK LUX - Quality Products",
   description: "Discover our carefully selected collection of premium items.",
 };
 

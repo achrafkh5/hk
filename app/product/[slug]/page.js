@@ -17,6 +17,7 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const [selectedColor, setSelectedColor] = useState('');
   const [added, setAdded] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
@@ -26,6 +27,13 @@ export default function ProductDetailPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.slug]);
+
+  // Set default color when product loads
+  useEffect(() => {
+    if (product?.colors && product.colors.length > 0 && !selectedColor) {
+      setSelectedColor(product.colors[0]);
+    }
+  }, [product, selectedColor]);
 
   async function fetchProduct() {
     try {
@@ -45,6 +53,12 @@ export default function ProductDetailPage() {
   // Get text based on current language
   function getText(field) {
     return field?.[lang] || field?.en || '';
+  }
+
+  // Get translated color name
+  function getColorName(colorName) {
+    const colorKey = `color${colorName}`;
+    return t(colorKey) || colorName;
   }
 
   // Format price
@@ -67,7 +81,13 @@ export default function ProductDetailPage() {
   function handleAddToCart() {
     if (!product || product.stock < 1) return;
 
-    addToCart(product, quantity);
+    // If product has colors, require color selection
+    if (product.colors && product.colors.length > 0 && !selectedColor) {
+      alert(t('selectColor'));
+      return;
+    }
+
+    addToCart(product, quantity, selectedColor);
     setAdded(true);
 
     // Reset "added" state after 2 seconds
@@ -195,7 +215,7 @@ export default function ProductDetailPage() {
               {product.colors && product.colors.length > 0 && (
                 <div className="mb-6">
                   <p className="text-sm font-medium text-gray-700 mb-2">
-                    Available Colors:
+                    {t('availableColors')}:
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {product.colors.map((colorName, index) => {
@@ -226,7 +246,7 @@ export default function ProductDetailPage() {
                               border: hex === '#FFFFFF' ? '1px solid #d1d5db' : 'none',
                             }}
                           />
-                          <span className="text-gray-700">{colorName}</span>
+                          <span className="text-gray-700">{getColorName(colorName)}</span>
                         </div>
                       );
                     })}
@@ -244,7 +264,7 @@ export default function ProductDetailPage() {
                 {isOutOfStock ? t('outOfStock') : t('inStock')}
                 {!isOutOfStock && product.stock <= 10 && (
                   <span className="text-gray-500 ml-2">
-                    ({product.stock} left)
+                    ({product.stock} {t('itemsLeft')})
                   </span>
                 )}
               </p>
@@ -264,6 +284,56 @@ export default function ProductDetailPage() {
               {/* Quantity and Add to Cart */}
               {!isOutOfStock && (
                 <div className="space-y-4">
+                  {/* Color Selector */}
+                  {product.colors && product.colors.length > 0 && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        {t('selectColor')}:
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {product.colors.map((colorName, index) => {
+                          const colorMap = {
+                            'Black': '#000000',
+                            'White': '#FFFFFF',
+                            'Gray': '#9CA3AF',
+                            'Red': '#EF4444',
+                            'Blue': '#3B82F6',
+                            'Green': '#10B981',
+                            'Yellow': '#F59E0B',
+                            'Orange': '#F97316',
+                            'Pink': '#EC4899',
+                            'Purple': '#A855F7',
+                            'Brown': '#92400E',
+                            'Beige': '#D4A574',
+                          };
+                          const hex = colorMap[colorName] || '#000000';
+                          const isSelected = selectedColor === colorName;
+                          
+                          return (
+                            <button
+                              key={index}
+                              onClick={() => setSelectedColor(colorName)}
+                              className={`flex items-center gap-2 px-3 py-2 border-2 rounded transition-all ${
+                                isSelected
+                                  ? 'border-gray-900 bg-gray-50'
+                                  : 'border-gray-300 hover:border-gray-400'
+                              }`}
+                            >
+                              <div
+                                className="w-5 h-5 rounded-full"
+                                style={{
+                                  backgroundColor: hex,
+                                  border: hex === '#FFFFFF' ? '1px solid #d1d5db' : 'none',
+                                }}
+                              />
+                              <span className="text-sm text-gray-900">{getColorName(colorName)}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Quantity Selector */}
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-gray-600">{t('quantity')}:</span>

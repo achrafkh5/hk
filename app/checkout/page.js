@@ -41,6 +41,13 @@ export default function CheckoutPage() {
     return item.name || 'Unnamed';
   }
 
+  // Get translated color name
+  function getColorName(colorName) {
+    if (!colorName) return '';
+    const colorKey = `color${colorName}`;
+    return t(colorKey) || colorName;
+  }
+
   // Format price
   function formatPrice(price) {
     const currency = t('currency');
@@ -106,6 +113,7 @@ export default function CheckoutPage() {
         name: item.name,
         price: item.price,
         qty: item.qty,
+        color: item.color || null,
       })),
       total: getCartTotal(),
       customer: {
@@ -315,17 +323,24 @@ export default function CheckoutPage() {
               <div className="bg-gray-50 p-4 border border-gray-200">
                 {/* Items */}
                 <div className="space-y-3 mb-4">
-                  {cart.map((item) => (
+                  {cart.map((item, index) => (
                     <div
-                      key={item.productId}
-                      className="flex justify-between text-sm"
+                      key={`${item.productId}-${item.color || 'no-color'}-${index}`}
+                      className="text-sm"
                     >
-                      <span className="text-gray-700">
-                        {getProductName(item)} × {item.qty}
-                      </span>
-                      <span className="text-gray-900">
-                        {formatPrice(item.price * item.qty)}
-                      </span>
+                      <div className="flex justify-between">
+                        <span className="text-gray-700">
+                          {getProductName(item)} × {item.qty}
+                        </span>
+                        <span className="text-gray-900">
+                          {formatPrice(item.price * item.qty)}
+                        </span>
+                      </div>
+                      {item.color && (
+                        <span className="text-gray-500 text-xs">
+                          {t('color')}: {getColorName(item.color)}
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>

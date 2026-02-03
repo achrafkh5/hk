@@ -30,6 +30,37 @@ export default function AdminLayout({ children }) {
     }
   }, [session, status, router]);
 
+  // Force LTR direction for admin pages
+  useEffect(() => {
+    // Set LTR immediately
+    document.documentElement.dir = 'ltr';
+    document.documentElement.lang = 'en';
+    
+    // Create observer to prevent any changes to direction
+    const observer = new MutationObserver(() => {
+      if (document.documentElement.dir !== 'ltr') {
+        document.documentElement.dir = 'ltr';
+      }
+    });
+    
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['dir']
+    });
+    
+    // Cleanup
+    return () => {
+      observer.disconnect();
+      const savedLang = localStorage.getItem('lang');
+      if (savedLang === 'ar') {
+        document.documentElement.dir = 'rtl';
+        document.documentElement.lang = 'ar';
+      } else {
+        document.documentElement.dir = 'ltr';
+      }
+    };
+  }, []);
+
   // Show loading state
   if (status === 'loading') {
     return (
@@ -114,7 +145,7 @@ export default function AdminLayout({ children }) {
                   <MenuIcon />
                 </IconButton>
                 <Typography variant="h6" noWrap component="div">
-                  LUX Admin
+                  HK LUX Admin
                 </Typography>
               </Toolbar>
             </AppBar>

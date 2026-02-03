@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/lib/LanguageContext';
@@ -10,6 +11,12 @@ import Footer from '@/components/client/Footer';
 export default function CartPage() {
   const { lang, t } = useLanguage();
   const { cart, updateQuantity, removeFromCart, getCartTotal } = useCart();
+  const [mounted, setMounted] = useState(false);
+
+  // Only render cart content after hydration to avoid mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Get product name based on current language
   function getProductName(item) {
@@ -19,6 +26,13 @@ export default function CartPage() {
     return item.name || 'Unnamed';
   }
 
+  // Get translated color name
+  function getColorName(colorName) {
+    if (!colorName) return '';
+    const colorKey = `color${colorName}`;
+    return t(colorKey) || colorName;
+  }
+
   // Format price
   function formatPrice(price) {
     const currency = t('currency');
@@ -26,16 +40,38 @@ export default function CartPage() {
   }
 
   // Handle quantity change
-  function handleQuantityChange(productId, delta, currentQty) {
+  function handleQuantityChange(productId, color, delta, currentQty) {
     const newQty = currentQty + delta;
     if (newQty < 1) {
-      removeFromCart(productId);
+      removeFromCart(productId, color);
     } else {
-      updateQuantity(productId, newQty);
+      updateQuantity(productId, newQty, color);
     }
   }
 
   const cartTotal = getCartTotal();
+
+  // Show loading state until mounted to avoid hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 bg-white">
+          <div className="max-w-4xl mx-auto px-4 py-8">
+            <h1 className="text-2xl font-semibold text-gray-900 mb-8" suppressHydrationWarning>
+              {t('cartTitle')}
+            </h1>
+            <div className="text-center py-12">
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-48 mx-auto"></div>
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -64,9 +100,9 @@ export default function CartPage() {
             <>
               {/* Cart Items */}
               <div className="border-t border-gray-200">
-                {cart.map((item) => (
+                {cart.map((item, index) => (
                   <div
-                    key={item.productId}
+                    key={`${item.productId}-${item.color || 'no-color'}-${index}`}
                     className="flex items-start gap-4 py-6 border-b border-gray-200"
                   >
                     {/* Product Image */}
@@ -97,13 +133,20 @@ export default function CartPage() {
                       <p className="text-gray-600 text-sm mt-1">
                         {formatPrice(item.price)}
                       </p>
+                      
+                      {/* Color Display */}
+                      {item.color && (
+                        <p className="text-gray-500 text-sm mt-1">
+                          {t('color')}: {getColorName(item.color)}
+                        </p>
+                      )}
 
                       {/* Quantity Controls */}
                       <div className="flex items-center gap-4 mt-3">
                         <div className="flex items-center border border-gray-300">
                           <button
                             onClick={() =>
-                              handleQuantityChange(item.productId, -1, item.qty)
+                              handleQuantityChange(item.productId, item.color, -1, item.qty)
                             }
                             className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100"
                           >
@@ -114,7 +157,7 @@ export default function CartPage() {
                           </span>
                           <button
                             onClick={() =>
-                              handleQuantityChange(item.productId, 1, item.qty)
+                              handleQuantityChange(item.productId, item.color, 1, item.qty)
                             }
                             className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100"
                           >
@@ -123,7 +166,7 @@ export default function CartPage() {
                         </div>
 
                         <button
-                          onClick={() => removeFromCart(item.productId)}
+                          onClick={() => removeFromCart(item.productId, item.color)}
                           className="text-sm text-gray-500 hover:text-gray-700"
                         >
                           {t('remove')}

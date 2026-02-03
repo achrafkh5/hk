@@ -75,6 +75,7 @@ export async function POST(request) {
         name: item.name,
         price: parseFloat(item.price),
         qty: parseInt(item.qty),
+        color: item.color || null,
       })),
       total: parseFloat(total),
       customer: {

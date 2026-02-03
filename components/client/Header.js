@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/LanguageContext';
 import { useCart } from '@/lib/CartContext';
@@ -8,6 +9,12 @@ export default function Header() {
   const { lang, t, changeLanguage } = useLanguage();
   const { getCartCount } = useCart();
   const cartCount = getCartCount();
+  const [mounted, setMounted] = useState(false);
+
+  // Only render cart count after hydration to avoid mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <header className="border-b border-gray-200 bg-white">
@@ -40,12 +47,11 @@ export default function Header() {
               suppressHydrationWarning
             >
               {t('cart')}
-              {cartCount > 0 && (
+              {mounted && cartCount > 0 && (
                 <span 
                   className={`absolute -top-2 bg-gray-900 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center ${
                     lang === 'ar' ? '-left-4' : '-right-4'
                   }`}
-                  suppressHydrationWarning
                 >
                   {cartCount}
                 </span>
