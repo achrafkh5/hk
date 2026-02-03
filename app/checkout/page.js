@@ -80,6 +80,8 @@ export default function CheckoutPage() {
   const [dairas, setDairas] = useState([]);
   const [communes, setCommunes] = useState([]);
   const [deliveryPrice, setDeliveryPrice] = useState(0);
+  const [availableDeliveryTypes, setAvailableDeliveryTypes] = useState({ domicile: true, stopdesk: true });
+  const [isDeliveryAvailable, setIsDeliveryAvailable] = useState(true);
 
   // Redirect to cart if empty
   useEffect(() => {
@@ -90,22 +92,47 @@ export default function CheckoutPage() {
 
   // Calculate delivery price when wilaya or delivery type changes
   useEffect(() => {
-    if (formData.wilaya && formData.deliveryType) {
+    if (formData.wilaya) {
       const wilayaName = algerianWilayas.getWilayaName(formData.wilaya, 'ascii');
       const prices = DELIVERY_PRICES[wilayaName];
       
       if (prices) {
-        const price = prices[formData.deliveryType];
-        setDeliveryPrice(price);
+        // Check which delivery types are available
+        const domicileAvailable = prices.domicile > 0;
+        const stopdeskAvailable = prices.stopdesk > 0;
+        setAvailableDeliveryTypes({ domicile: domicileAvailable, stopdesk: stopdeskAvailable });
         
-        // Clear error if delivery is now available
-        if (price > 0) {
-          setError('');
+        // Check if any delivery is available
+        const anyDeliveryAvailable = domicileAvailable || stopdeskAvailable;
+        setIsDeliveryAvailable(anyDeliveryAvailable);
+        
+        // If current selection is not available, switch to available option
+        if (formData.deliveryType === 'domicile' && !domicileAvailable && stopdeskAvailable) {
+          setFormData(prev => ({ ...prev, deliveryType: 'stopdesk' }));
+          setDeliveryPrice(prices.stopdesk);
+        } else if (formData.deliveryType === 'stopdesk' && !stopdeskAvailable && domicileAvailable) {
+          setFormData(prev => ({ ...prev, deliveryType: 'domicile' }));
+          setDeliveryPrice(prices.domicile);
+        } else if (formData.deliveryType && anyDeliveryAvailable) {
+          const price = prices[formData.deliveryType];
+          setDeliveryPrice(price);
+          
+          // Clear error if delivery is now available
+          if (price > 0) {
+            setError('');
+          }
+        } else {
+          setDeliveryPrice(0);
         }
       } else {
+        // Wilaya not in delivery list
+        setAvailableDeliveryTypes({ domicile: false, stopdesk: false });
+        setIsDeliveryAvailable(false);
         setDeliveryPrice(0);
       }
     } else {
+      setAvailableDeliveryTypes({ domicile: true, stopdesk: true });
+      setIsDeliveryAvailable(true);
       setDeliveryPrice(0);
     }
   }, [formData.wilaya, formData.deliveryType]);
@@ -175,8 +202,12 @@ export default function CheckoutPage() {
       setError(t('communeRequired') || 'Commune is required');
       return;
     }
+    if (!isDeliveryAvailable) {
+      setError('Delivery not available for selected wilaya');
+      return;
+    }
     if (deliveryPrice === 0) {
-      setError('Delivery not available for selected wilaya and delivery type');
+      setError('Delivery not available for selected delivery type');
       return;
     }
 
@@ -385,34 +416,53 @@ export default function CheckoutPage() {
                   <label className="block text-sm text-gray-700 mb-2" suppressHydrationWarning>
                     {t('deliveryType')} *
                   </label>
-                  <div className="space-y-2">
-                    <label className="flex items-center space-x-3 p-3 border border-gray-300 rounded cursor-pointer hover:bg-gray-50">
-                      <input
-                        type="radio"
-                        name="deliveryType"
-                        value="domicile"
-                        checked={formData.deliveryType === 'domicile'}
-                        onChange={(e) => handleInputChange('deliveryType', e.target.value)}
-                        className="w-4 h-4"
-                      />
-                      <span className="text-sm text-gray-900" suppressHydrationWarning>{t('homeDelivery')}</span>
-                    </label>
-                    <label className="flex items-center space-x-3 p-3 border border-gray-300 rounded cursor-pointer hover:bg-gray-50">
-                      <input
-                        type="radio"
-                        name="deliveryType"
-                        value="stopdesk"
-                        checked={formData.deliveryType === 'stopdesk'}
-                        onChange={(e) => handleInputChange('deliveryType', e.target.value)}
-                        className="w-4 h-4"
-                      />
-                      <span className="text-sm text-gray-900" suppressHydrationWarning>{t('stopDesk')}</span>
-                    </label>
-                  </div>
-                  {deliveryPrice === 0 && formData.wilaya && (
-                    <p className="text-red-600 text-sm mt-2">
-                      ⚠️ Delivery not available for this option
-                    </p>
+                  {!isDeliveryAvailable && formData.wilaya ? (
+                    <div className="p-3 border border-red-300 rounded bg-red-50">
+                      <p className="text-red-600 text-sm">
+                        ⚠️ Delivery is not available for the selected wilaya
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <label className={`flex items-center space-x-3 p-3 border border-gray-300 rounded ${
+                        availableDeliveryTypes.domicile ? 'cursor-pointer hover:bg-gray-50' : 'bg-gray-100 cursor-not-allowed opacity-60'
+                      }`}>
+                        <input
+                          type="radio"
+                          name="deliveryType"
+                          value="domicile"
+                          checked={formData.deliveryType === 'domicile'}
+                          onChange={(e) => handleInputChange('deliveryType', e.target.value)}
+                          disabled={!availableDeliveryTypes.domicile}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm text-gray-900" suppressHydrationWarning>
+                          {t('homeDelivery')}
+                          {!availableDeliveryTypes.domicile && formData.wilaya && (
+                            <span className="text-red-600 ml-2">(Not available)</span>
+                          )}
+                        </span>
+                      </label>
+                      <label className={`flex items-center space-x-3 p-3 border border-gray-300 rounded ${
+                        availableDeliveryTypes.stopdesk ? 'cursor-pointer hover:bg-gray-50' : 'bg-gray-100 cursor-not-allowed opacity-60'
+                      }`}>
+                        <input
+                          type="radio"
+                          name="deliveryType"
+                          value="stopdesk"
+                          checked={formData.deliveryType === 'stopdesk'}
+                          onChange={(e) => handleInputChange('deliveryType', e.target.value)}
+                          disabled={!availableDeliveryTypes.stopdesk}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm text-gray-900" suppressHydrationWarning>
+                          {t('stopDesk')}
+                          {!availableDeliveryTypes.stopdesk && formData.wilaya && (
+                            <span className="text-red-600 ml-2">(Not available)</span>
+                          )}
+                        </span>
+                      </label>
+                    </div>
                   )}
                 </div>
 
@@ -475,7 +525,7 @@ export default function CheckoutPage() {
 
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || !isDeliveryAvailable}
                   className="w-full py-3 bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   {submitting ? '...' : t('placeOrder')}
