@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/LanguageContext';
 import { useCart } from '@/lib/CartContext';
@@ -8,6 +9,7 @@ import { useCart } from '@/lib/CartContext';
 export default function FloatingCartButton() {
   const { t } = useLanguage();
   const { getCartCount } = useCart();
+  const pathname = usePathname();
   const cartCount = getCartCount();
   const [prevCount, setPrevCount] = useState(0);
   const [animate, setAnimate] = useState(false);
@@ -28,8 +30,8 @@ export default function FloatingCartButton() {
     setPrevCount(cartCount);
   }, [cartCount, prevCount, mounted]);
 
-  // Don't render on server or if cart is empty
-  if (!mounted || cartCount === 0) {
+  // Don't render on server, if cart is empty, or on admin/login pages
+  if (!mounted || cartCount === 0 || pathname?.startsWith('/admin') || pathname === '/login') {
     return null;
   }
 
