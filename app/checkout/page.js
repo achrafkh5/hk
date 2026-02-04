@@ -73,7 +73,7 @@ export default function CheckoutPage() {
     wilaya: '',
     daira: '',
     commune: '',
-    deliveryType: 'domicile',
+    deliveryType: 'stopdesk',
   });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
