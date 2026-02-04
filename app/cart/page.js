@@ -34,12 +34,12 @@ export default function CartPage() {
   }
 
   // Handle quantity change
-  function handleQuantityChange(productId, color, delta, currentQty) {
+  function handleQuantityChange(productId, color, size, delta, currentQty) {
     const newQty = currentQty + delta;
     if (newQty < 1) {
-      removeFromCart(productId, color);
+      removeFromCart(productId, color, size);
     } else {
-      updateQuantity(productId, newQty, color);
+      updateQuantity(productId, newQty, color, size);
     }
   }
 
@@ -96,7 +96,7 @@ export default function CartPage() {
               <div className="border-t border-gray-200">
                 {cart.map((item, index) => (
                   <div
-                    key={`${item.productId}-${item.color || 'no-color'}-${index}`}
+                    key={`${item.productId}-${item.color || 'no-color'}-${item.size || 'no-size'}-${index}`}
                     className="flex items-start gap-4 py-6 border-b border-gray-200"
                   >
                     {/* Product Image */}
@@ -134,13 +134,20 @@ export default function CartPage() {
                           {t('color')}: {getColorName(item.color)}
                         </p>
                       )}
+                      
+                      {/* Size Display */}
+                      {item.size && (
+                        <p className="text-gray-500 text-sm mt-1">
+                          {t('size') || 'Size'}: {item.size}
+                        </p>
+                      )}
 
                       {/* Quantity Controls */}
                       <div className="flex items-center gap-4 mt-3">
                         <div className="flex items-center border border-gray-300">
                           <button
                             onClick={() =>
-                              handleQuantityChange(item.productId, item.color, -1, item.qty)
+                              handleQuantityChange(item.productId, item.color, item.size, -1, item.qty)
                             }
                             className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100"
                           >
@@ -151,7 +158,7 @@ export default function CartPage() {
                           </span>
                           <button
                             onClick={() =>
-                              handleQuantityChange(item.productId, item.color, 1, item.qty)
+                              handleQuantityChange(item.productId, item.color, item.size, 1, item.qty)
                             }
                             className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100"
                           >
@@ -160,7 +167,7 @@ export default function CartPage() {
                         </div>
 
                         <button
-                          onClick={() => removeFromCart(item.productId, item.color)}
+                          onClick={() => removeFromCart(item.productId, item.color, item.size)}
                           className="text-sm text-gray-500 hover:text-gray-700"
                           suppressHydrationWarning
                         >

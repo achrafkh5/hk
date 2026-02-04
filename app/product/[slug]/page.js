@@ -18,6 +18,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState('');
+  const [selectedSize, setSelectedSize] = useState('');
   const [added, setAdded] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
@@ -33,7 +34,10 @@ export default function ProductDetailPage() {
     if (product?.colors && product.colors.length > 0 && !selectedColor) {
       setSelectedColor(product.colors[0]);
     }
-  }, [product, selectedColor]);
+    if (product?.hasSize && product.sizes && product.sizes.length > 0 && !selectedSize) {
+      setSelectedSize(product.sizes[0].name);
+    }
+  }, [product, selectedColor, selectedSize]);
 
   async function fetchProduct() {
     try {
@@ -67,12 +71,22 @@ export default function ProductDetailPage() {
     return lang === 'ar' ? `${price.toFixed(2)} ${currency} ` : `${price.toFixed(2)} ${currency}`;
   }
 
+  // Get available stock for selected size
+  function getAvailableStock() {
+    if (product?.hasSize && selectedSize) {
+      const sizeObj = product.sizes.find(s => s.name === selectedSize);
+      return sizeObj ? sizeObj.stock : 0;
+    }
+    return product?.stock || 0;
+  }
+
   // Handle quantity change
   function handleQuantityChange(delta) {
     setQuantity((prev) => {
       const newQty = prev + delta;
       if (newQty < 1) return 1;
-      if (product?.stock && newQty > product.stock) return product.stock;
+      const availableStock = getAvailableStock();
+      if (availableStock && newQty > availableStock) return availableStock;
       return newQty;
     });
   }
@@ -87,7 +101,13 @@ export default function ProductDetailPage() {
       return;
     }
 
-    addToCart(product, quantity, selectedColor);
+    // If product has sizes, require size selection
+    if (product.hasSize && product.sizes && product.sizes.length > 0 && !selectedSize) {
+      alert(t('selectSize') || 'Please select a size');
+      return;
+    }
+
+    addToCart(product, quantity, selectedColor, selectedSize);
     setAdded(true);
 
     // Reset "added" state after 2 seconds
@@ -132,7 +152,8 @@ export default function ProductDetailPage() {
     );
   }
 
-  const isOutOfStock = !product.stock || product.stock < 1;
+  const availableStock = getAvailableStock();
+  const isOutOfStock = !availableStock || availableStock < 1;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -262,9 +283,9 @@ export default function ProductDetailPage() {
                 suppressHydrationWarning
               >
                 {isOutOfStock ? t('outOfStock') : t('inStock')}
-                {!isOutOfStock && product.stock <= 10 && (
+                {!isOutOfStock && availableStock <= 10 && (
                   <span className="text-gray-500 ml-2">
-                    ({product.stock} {t('itemsLeft')})
+                    ({availableStock} {t('itemsLeft')})
                   </span>
                 )}
               </p>
@@ -334,6 +355,41 @@ export default function ProductDetailPage() {
                     </div>
                   )}
 
+                  {/* Size Selector */}
+                  {product.hasSize && product.sizes && product.sizes.length > 0 && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        {t('selectSize') || 'Select Size'}:
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {product.sizes.map((sizeObj, index) => {
+                          const isSelected = selectedSize === sizeObj.name;
+                          const isAvailable = sizeObj.stock > 0;
+                          
+                          return (
+                            <button
+                              key={index}
+                              onClick={() => isAvailable && setSelectedSize(sizeObj.name)}
+                              disabled={!isAvailable}
+                              className={`px-4 py-2 border-2 rounded transition-all min-w-[60px] ${
+                                !isAvailable
+                                  ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                                  : isSelected
+                                  ? 'border-gray-900 bg-gray-50 text-gray-900'
+                                  : 'border-gray-300 hover:border-gray-400 text-gray-900'
+                              }`}
+                            >
+                              <span className="text-sm font-medium">{sizeObj.name}</span>
+                              {!isAvailable && (
+                                <span className="block text-xs mt-0.5">Out</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Quantity Selector */}
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-gray-600">{t('quantity')}:</span>
@@ -351,7 +407,7 @@ export default function ProductDetailPage() {
                       <button
                         onClick={() => handleQuantityChange(1)}
                         className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-100"
-                        disabled={product.stock && quantity >= product.stock}
+                        disabled={availableStock && quantity >= availableStock}
                       >
                         +
                       </button>

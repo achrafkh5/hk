@@ -68,7 +68,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }) {
         <Typography
           variant="h6"
           sx={{
-            color: 'primary.main',
+            color: 'text.primary',
             fontWeight: 700,
             letterSpacing: '-0.5px',
           }}
