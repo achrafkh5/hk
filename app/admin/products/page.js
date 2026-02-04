@@ -279,8 +279,15 @@ export default function ProductsPage() {
       return;
     }
 
-    if (!formData.stock || parseInt(formData.stock) < 0) {
+    // Only validate stock if hasSize is false
+    if (!formData.hasSize && (!formData.stock || parseInt(formData.stock) < 0)) {
       setError('Valid stock is required');
+      return;
+    }
+
+    // Validate sizes if hasSize is true
+    if (formData.hasSize && (!formData.sizes || formData.sizes.length === 0)) {
+      setError('Please add at least one size');
       return;
     }
 
@@ -505,7 +512,20 @@ export default function ProductsPage() {
                     </Typography>
                   </TableCell>
                   <TableCell>{formatPrice(product.price)}</TableCell>
-                  <TableCell>{product.stock}</TableCell>
+                  <TableCell>
+                    {product.hasSize && product.sizes?.length > 0 ? (
+                      <Box>
+                        <Typography variant="body2">
+                          {product.sizes.reduce((sum, size) => sum + (size.stock || 0), 0)}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          ({product.sizes.length} sizes)
+                        </Typography>
+                      </Box>
+                    ) : (
+                      product.stock
+                    )}
+                  </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                       {product.colors?.map((colorName, index) => {

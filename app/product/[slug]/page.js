@@ -93,7 +93,11 @@ export default function ProductDetailPage() {
 
   // Handle add to cart
   function handleAddToCart() {
-    if (!product || product.stock < 1) return;
+    if (!product) return;
+
+    // Check available stock
+    const availableStock = getAvailableStock();
+    if (availableStock < 1) return;
 
     // If product has colors, require color selection
     if (product.colors && product.colors.length > 0 && !selectedColor) {

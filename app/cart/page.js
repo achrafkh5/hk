@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/lib/LanguageContext';
@@ -11,6 +12,43 @@ export default function CartPage() {
   const { lang, t } = useLanguage();
   const { cart, updateQuantity, removeFromCart, getCartTotal } = useCart();
   const isClient = typeof window !== 'undefined';
+  const [productStocks, setProductStocks] = useState({});
+
+  // Fetch product stocks for all cart items
+  useEffect(() => {
+    async function fetchStocks() {
+      const stocks = {};
+      for (const item of cart) {
+        try {
+          const res = await fetch(`/api/products/${item.productId}`);
+          if (res.ok) {
+            const product = await res.json();
+            const key = `${item.productId}-${item.size || 'no-size'}`;
+            
+            if (product.hasSize && item.size) {
+              const sizeObj = product.sizes.find(s => s.name === item.size);
+              stocks[key] = sizeObj ? sizeObj.stock : 0;
+            } else {
+              stocks[key] = product.stock || 0;
+            }
+          }
+        } catch (err) {
+          console.error('Error fetching product stock:', err);
+        }
+      }
+      setProductStocks(stocks);
+    }
+
+    if (cart.length > 0) {
+      fetchStocks();
+    }
+  }, [cart]);
+
+  // Get available stock for an item
+  function getAvailableStock(item) {
+    const key = `${item.productId}-${item.size || 'no-size'}`;
+    return productStocks[key] || 0;
+  }
 
   // Get product name based on current language
   function getProductName(item) {
@@ -34,10 +72,15 @@ export default function CartPage() {
   }
 
   // Handle quantity change
-  function handleQuantityChange(productId, color, size, delta, currentQty) {
+  function handleQuantityChange(productId, color, size, delta, currentQty, item) {
+    const availableStock = getAvailableStock(item);
     const newQty = currentQty + delta;
+    
     if (newQty < 1) {
       removeFromCart(productId, color, size);
+    } else if (newQty > availableStock) {
+      // Don't allow exceeding available stock
+      return;
     } else {
       updateQuantity(productId, newQty, color, size);
     }
@@ -144,26 +187,37 @@ export default function CartPage() {
 
                       {/* Quantity Controls */}
                       <div className="flex items-center gap-4 mt-3">
-                        <div className="flex items-center border border-gray-300">
-                          <button
-                            onClick={() =>
-                              handleQuantityChange(item.productId, item.color, item.size, -1, item.qty)
-                            }
-                            className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100"
-                          >
-                            −
-                          </button>
-                          <span className="w-10 text-center text-sm text-gray-900">
-                            {item.qty}
-                          </span>
-                          <button
-                            onClick={() =>
-                              handleQuantityChange(item.productId, item.color, item.size, 1, item.qty)
-                            }
-                            className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100"
-                          >
-                            +
-                          </button>
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center border border-gray-300">
+                            <button
+                              onClick={() =>
+                                handleQuantityChange(item.productId, item.color, item.size, -1, item.qty, item)
+                              }
+                              className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100"
+                            >
+                              −
+                            </button>
+                            <span className="w-10 text-center text-sm text-gray-900">
+                              {item.qty}
+                            </span>
+                            <button
+                              onClick={() =>
+                                handleQuantityChange(item.productId, item.color, item.size, 1, item.qty, item)
+                              }
+                              disabled={item.qty >= getAvailableStock(item)}
+                              className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              +
+                            </button>
+                          </div>
+                          {getAvailableStock(item) > 0 && (
+                            <p className="text-xs text-gray-500">
+                              {item.qty >= getAvailableStock(item) 
+                                ? (t('maxStock') || 'Max stock reached')
+                                : `${getAvailableStock(item)} ${t('available') || 'available'}`
+                              }
+                            </p>
+                          )}
                         </div>
 
                         <button

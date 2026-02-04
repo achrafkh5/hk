@@ -217,16 +217,42 @@ export default function CheckoutPage() {
     const languageKey = lang === 'ar' ? 'arabic' : 'ascii';
     const wilayaName = algerianWilayas.getWilayaName(formData.wilaya, languageKey);
     const selectedDaira = dairas.find(d => d.id === formData.daira);
-    const selectedCommune = communes.find(c => c.id === formData.commune);
+    
+    // Try to find commune by matching both string and number versions of ID
+    const selectedCommune = communes.find(c => 
+      c.id === formData.commune || 
+      c.id === parseInt(formData.commune) || 
+      String(c.id) === String(formData.commune)
+    );
+    
+    // Get commune name based on language
+    let communeName = String(formData.commune);
+    if (selectedCommune) {
+      if (lang === 'ar') {
+        communeName = selectedCommune.commune_name || selectedCommune.commune_name_ascii || String(formData.commune);
+      } else {
+        communeName = selectedCommune.commune_name_ascii || selectedCommune.commune_name || String(formData.commune);
+      }
+    }
+    
+    console.log('Commune ID from form:', formData.commune, 'Type:', typeof formData.commune);
+    console.log('Available communes:', communes.map(c => ({ id: c.id, type: typeof c.id })));
+    console.log('Selected Commune:', selectedCommune);
+    console.log('Commune Name:', communeName);
+    console.log('Cart items:', JSON.stringify(cart, null, 2));
 
     const orderPayload = {
-      items: cart.map((item) => ({
-        productId: item.productId,
-        name: item.name,
-        price: item.price,
-        qty: item.qty,
-        color: item.color || null,
-      })),
+      items: cart.map((item) => {
+        console.log('Item in cart:', item);
+        return {
+          productId: item.productId,
+          name: item.name,
+          price: item.price,
+          qty: item.qty,
+          color: item.color || null,
+          size: item.size || null,
+        };
+      }),
       subtotal: getCartTotal(),
       deliveryPrice: deliveryPrice,
       deliveryType: formData.deliveryType,
@@ -236,7 +262,7 @@ export default function CheckoutPage() {
         phone: formData.phone.trim(),
         wilaya: wilayaName || formData.wilaya,
         daira: selectedDaira?.name?.[languageKey] || formData.daira,
-        commune: lang === 'ar' ? (selectedCommune?.commune_name || formData.commune) : (selectedCommune?.commune_name_ascii || formData.commune),
+        commune: communeName,
       },
     };
 
