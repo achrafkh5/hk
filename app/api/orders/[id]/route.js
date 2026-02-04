@@ -60,6 +60,54 @@ export async function PUT(request, { params }) {
 
     const db = await getDb();
 
+    // Get current order to check if stock should be reduced
+    const order = await db.collection('orders').findOne({
+      _id: new ObjectId(id),
+    });
+
+    if (!order) {
+      return NextResponse.json(
+        { error: 'Order not found' },
+        { status: 404 }
+      );
+    }
+
+    // Reduce stock if changing to 'paid' or 'shipped' and order wasn't already paid/shipped
+    const shouldReduceStock = 
+      (status === 'paid' || status === 'shipped') && 
+      (order.status !== 'paid' && order.status !== 'shipped');
+
+    if (shouldReduceStock && order.items && order.items.length > 0) {
+      // Reduce stock for each item
+      for (const item of order.items) {
+        const product = await db.collection('products').findOne({
+          _id: new ObjectId(item.productId),
+        });
+
+        if (product) {
+          if (product.hasSize && item.size) {
+            // Product has sizes - update specific size stock
+            const sizeIndex = product.sizes.findIndex(s => s.name === item.size);
+            if (sizeIndex !== -1) {
+              const newStock = Math.max(0, (product.sizes[sizeIndex].stock || 0) - item.qty);
+              await db.collection('products').updateOne(
+                { _id: new ObjectId(item.productId) },
+                { $set: { [`sizes.${sizeIndex}.stock`]: newStock } }
+              );
+            }
+          } else {
+            // Regular product - update main stock
+            const newStock = Math.max(0, (product.stock || 0) - item.qty);
+            await db.collection('products').updateOne(
+              { _id: new ObjectId(item.productId) },
+              { $set: { stock: newStock } }
+            );
+          }
+        }
+      }
+    }
+
+    // Update order status
     const result = await db.collection('orders').updateOne(
       { _id: new ObjectId(id) },
       {

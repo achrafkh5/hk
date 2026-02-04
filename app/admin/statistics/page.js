@@ -20,7 +20,7 @@ import {
 
 // Format price for display
 function formatPrice(price) {
-  return `$${parseFloat(price || 0).toFixed(2)}`;
+  return `${parseFloat(price || 0).toFixed(2)} DA`;
 }
 
 // Format date for chart

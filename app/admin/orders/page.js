@@ -62,7 +62,7 @@ function formatDate(dateString) {
 
 // Format price
 function formatPrice(price) {
-  return `$${parseFloat(price).toFixed(2)}`;
+  return `${parseFloat(price).toFixed(2)} DA`;
 }
 
 // Shorten order ID for display
@@ -304,6 +304,7 @@ export default function OrdersPage() {
                       <TableRow>
                         <TableCell>Product</TableCell>
                         <TableCell>Color</TableCell>
+                        <TableCell>Size</TableCell>
                         <TableCell align="right">Qty</TableCell>
                         <TableCell align="right">Price</TableCell>
                       </TableRow>
@@ -316,6 +317,17 @@ export default function OrdersPage() {
                             {item.color ? (
                               <Chip 
                                 label={item.color} 
+                                size="small" 
+                                variant="outlined"
+                              />
+                            ) : (
+                              '-'
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {item.size ? (
+                              <Chip 
+                                label={item.size} 
                                 size="small" 
                                 variant="outlined"
                               />

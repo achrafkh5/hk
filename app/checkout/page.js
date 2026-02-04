@@ -11,33 +11,32 @@ import algerianWilayas from 'algeria-wilayas';
 
 const DELIVERY_PRICES = {
   Adrar: { domicile: 1400, stopdesk: 970 },
-  Chlef: { domicile: 750, stopdesk: 520 },
+  Chlef: { domicile: 800, stopdesk: 520 },
   Laghouat: { domicile: 950, stopdesk: 670 },
-  "Oum El Bouaghi": { domicile: 800, stopdesk: 520 },
-  Batna: { domicile: 800, stopdesk: 520 },
-  Bejaia: { domicile: 800, stopdesk: 520 },
-  Biskra: { domicile: 950, stopdesk: 670 },
+  "Oum El Bouaghi": { domicile: 700, stopdesk: 520 },
+  Bejaia: { domicile: 750, stopdesk: 520 },
+  Biskra: { domicile: 800, stopdesk: 570 },
   Bechar: { domicile: 1100, stopdesk: 720 },
-  Blida: { domicile: 400, stopdesk: 370 },
+  Blida: { domicile: 750, stopdesk: 520 },
   Bouira: { domicile: 750, stopdesk: 520 },
   Tamanrasset: { domicile: 1600, stopdesk: 1120 },
-  Tebessa: { domicile: 850, stopdesk: 520 },
-  Tlemcen: { domicile: 850, stopdesk: 570 },
+  Tebessa: { domicile: 800, stopdesk: 520 },
+  Tlemcen: { domicile: 950, stopdesk: 620 },
   Tiaret: { domicile: 800, stopdesk: 520 },
-  "Tizi Ouzou": { domicile: 750, stopdesk: 520 },
-  Alger: { domicile: 500, stopdesk: 420 },
+  "Tizi Ouzou": { domicile: 800, stopdesk: 520 },
+  Alger: { domicile: 600, stopdesk: 520 },
   Djelfa: { domicile: 950, stopdesk: 670 },
   Jijel: { domicile: 800, stopdesk: 520 },
   Setif: { domicile: 750, stopdesk: 520 },
   Saida: { domicile: 800, stopdesk: 570 },
-  Skikda: { domicile: 800, stopdesk: 520 },
+  Skikda: { domicile: 750, stopdesk: 520 },
   "Sidi Bel Abbes": { domicile: 800, stopdesk: 520 },
-  Annaba: { domicile: 800, stopdesk: 520 },
-  Guelma: { domicile: 800, stopdesk: 520 },
-  Constantine: { domicile: 800, stopdesk: 520 },
-  Medea: { domicile: 750, stopdesk: 520 },
+  Annaba: { domicile: 750, stopdesk: 520 },
+  Guelma: { domicile: 750, stopdesk: 520 },
+  Constantine: { domicile: 750, stopdesk: 520 },
+  Medea: { domicile: 800, stopdesk: 520 },
   Mostaganem: { domicile: 800, stopdesk: 520 },
-  "M'Sila": { domicile: 850, stopdesk: 570 },
+  "M'Sila": { domicile: 800, stopdesk: 570 },
   Mascara: { domicile: 800, stopdesk: 520 },
   Ouargla: { domicile: 950, stopdesk: 670 },
   Oran: { domicile: 800, stopdesk: 520 },
@@ -45,22 +44,31 @@ const DELIVERY_PRICES = {
   Illizi: { domicile: 0, stopdesk: 0 },
   "Bordj Bou Arreridj": { domicile: 750, stopdesk: 520 },
   Boumerdes: { domicile: 750, stopdesk: 520 },
-  "El Tarf": { domicile: 800, stopdesk: 520 },
+  "El Tarf": { domicile: 750, stopdesk: 520 },
   Tindouf: { domicile: 0, stopdesk: 0 },
-  Tissemsilt: { domicile: 800, stopdesk: 0 },
+  Tissemsilt: { domicile: 800, stopdesk: 520 },
   "El Oued": { domicile: 950, stopdesk: 670 },
-  Khenchela: { domicile: 800, stopdesk: 0 },
-  "Souk Ahras": { domicile: 800, stopdesk: 520 },
-  Tipaza: { domicile: 750, stopdesk: 520 },
-  Mila: { domicile: 800, stopdesk: 520 },
-  "Ain Defla": { domicile: 750, stopdesk: 520 },
+  Khenchela: { domicile: 600, stopdesk: 520 },
+  "Souk Ahras": { domicile: 700, stopdesk: 520 },
+  Tipaza: { domicile: 800, stopdesk: 520 },
+  Mila: { domicile: 700, stopdesk: 520 },
+  "Ain Defla": { domicile: 800, stopdesk: 520 },
   Naama: { domicile: 1100, stopdesk: 670 },
   "Ain Temouchent": { domicile: 800, stopdesk: 520 },
   Ghardaia: { domicile: 950, stopdesk: 670 },
   Relizane: { domicile: 800, stopdesk: 520 },
-  Timimoun: { domicile: 1400, stopdesk: 0 },
-  "Bordj Badji Mokhtar": { domicile: 0, stopdesk: 0 }
+  Timimoun: { domicile: 1400, stopdesk: 970 },
+  "Bordj Badji Mokhtar": { domicile: 0, stopdesk: 0 },
+  "Ouled Djellal": { domicile: 950, stopdesk: 570 },
+  "Beni Abbes": { domicile: 1200, stopdesk: 970 },
+  InSalah: { domicile: 1600, stopdesk: 1120 },
+  "El Guezzam": { domicile: 1600, stopdesk: 0 },
+  Touggourt: { domicile: 950, stopdesk: 670 },
+  Djanet: { domicile: 0, stopdesk: 0 },
+  "El Meghaier": { domicile: 0, stopdesk: 0 },
+  "El Menia": { domicile: 1000, stopdesk: 0 }
 };
+
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -217,16 +225,42 @@ export default function CheckoutPage() {
     const languageKey = lang === 'ar' ? 'arabic' : 'ascii';
     const wilayaName = algerianWilayas.getWilayaName(formData.wilaya, languageKey);
     const selectedDaira = dairas.find(d => d.id === formData.daira);
-    const selectedCommune = communes.find(c => c.id === formData.commune);
+    
+    // Try to find commune by matching both string and number versions of ID
+    const selectedCommune = communes.find(c => 
+      c.id === formData.commune || 
+      c.id === parseInt(formData.commune) || 
+      String(c.id) === String(formData.commune)
+    );
+    
+    // Get commune name based on language
+    let communeName = String(formData.commune);
+    if (selectedCommune) {
+      if (lang === 'ar') {
+        communeName = selectedCommune.commune_name || selectedCommune.commune_name_ascii || String(formData.commune);
+      } else {
+        communeName = selectedCommune.commune_name_ascii || selectedCommune.commune_name || String(formData.commune);
+      }
+    }
+    
+    console.log('Commune ID from form:', formData.commune, 'Type:', typeof formData.commune);
+    console.log('Available communes:', communes.map(c => ({ id: c.id, type: typeof c.id })));
+    console.log('Selected Commune:', selectedCommune);
+    console.log('Commune Name:', communeName);
+    console.log('Cart items:', JSON.stringify(cart, null, 2));
 
     const orderPayload = {
-      items: cart.map((item) => ({
-        productId: item.productId,
-        name: item.name,
-        price: item.price,
-        qty: item.qty,
-        color: item.color || null,
-      })),
+      items: cart.map((item) => {
+        console.log('Item in cart:', item);
+        return {
+          productId: item.productId,
+          name: item.name,
+          price: item.price,
+          qty: item.qty,
+          color: item.color || null,
+          size: item.size || null,
+        };
+      }),
       subtotal: getCartTotal(),
       deliveryPrice: deliveryPrice,
       deliveryType: formData.deliveryType,
@@ -236,7 +270,7 @@ export default function CheckoutPage() {
         phone: formData.phone.trim(),
         wilaya: wilayaName || formData.wilaya,
         daira: selectedDaira?.name?.[languageKey] || formData.daira,
-        commune: lang === 'ar' ? (selectedCommune?.commune_name || formData.commune) : (selectedCommune?.commune_name_ascii || formData.commune),
+        commune: communeName,
       },
     };
 

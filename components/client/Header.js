@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useLanguage } from '@/lib/LanguageContext';
 import { useCart } from '@/lib/CartContext';
 
@@ -17,12 +18,14 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="border-b border-gray-200 bg-white">
+    <header className="border-b border-gray-200" style={{backgroundColor: '#fdf5ea'}}>
       <div className="max-w-6xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="text-xl font-semibold text-gray-900">
-            <span suppressHydrationWarning>{t('logo')}</span>
+          <Link href="/" className="flex items-center gap-2">
+            <span className="text-xl font-semibold text-gray-900" suppressHydrationWarning>
+              {t('logo')}
+            </span>
           </Link>
 
           {/* Navigation */}

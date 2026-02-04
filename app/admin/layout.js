@@ -145,7 +145,7 @@ export default function AdminLayout({ children }) {
                   <MenuIcon />
                 </IconButton>
                 <Typography variant="h6" noWrap component="div">
-                  HK LUX Admin
+                   HK LUX Admin
                 </Typography>
               </Toolbar>
             </AppBar>

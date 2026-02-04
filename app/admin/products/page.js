@@ -74,6 +74,8 @@ export default function ProductsPage() {
     categoryId: '',
     images: [],
     colors: [],
+    hasSize: false,
+    sizes: [],
     active: true,
   });
   const [uploading, setUploading] = useState(false);
@@ -165,6 +167,8 @@ export default function ProductsPage() {
         categoryId: product.categoryId || '',
         images: product.images || [],
         colors: product.colors || [],
+        hasSize: product.hasSize || false,
+        sizes: product.sizes || [],
         active: product.active !== false,
       });
     } else {
@@ -182,6 +186,8 @@ export default function ProductsPage() {
         categoryId: '',
         images: [],
         colors: [],
+        hasSize: false,
+        sizes: [],
         active: true,
       });
     }
@@ -273,8 +279,15 @@ export default function ProductsPage() {
       return;
     }
 
-    if (!formData.stock || parseInt(formData.stock) < 0) {
+    // Only validate stock if hasSize is false
+    if (!formData.hasSize && (!formData.stock || parseInt(formData.stock) < 0)) {
       setError('Valid stock is required');
+      return;
+    }
+
+    // Validate sizes if hasSize is true
+    if (formData.hasSize && (!formData.sizes || formData.sizes.length === 0)) {
+      setError('Please add at least one size');
       return;
     }
 
@@ -297,6 +310,8 @@ export default function ProductsPage() {
       categoryId: formData.categoryId || null,
       images: Array.isArray(formData.images) ? formData.images : [],
       colors: Array.isArray(formData.colors) ? formData.colors : [],
+      hasSize: formData.hasSize,
+      sizes: formData.hasSize ? formData.sizes : [],
       active: formData.active,
     };
 
@@ -497,7 +512,20 @@ export default function ProductsPage() {
                     </Typography>
                   </TableCell>
                   <TableCell>{formatPrice(product.price)}</TableCell>
-                  <TableCell>{product.stock}</TableCell>
+                  <TableCell>
+                    {product.hasSize && product.sizes?.length > 0 ? (
+                      <Box>
+                        <Typography variant="body2">
+                          {product.sizes.reduce((sum, size) => sum + (size.stock || 0), 0)}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          ({product.sizes.length} sizes)
+                        </Typography>
+                      </Box>
+                    ) : (
+                      product.stock
+                    )}
+                  </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                       {product.colors?.map((colorName, index) => {
@@ -654,18 +682,100 @@ export default function ProductsPage() {
                   htmlInput: { min: 0, step: 0.01 },
                 }}
               />
-              <TextField
-                label="Stock"
-                type="number"
-                value={formData.stock}
-                onChange={(e) => handleInputChange('stock', e.target.value)}
-                fullWidth
-                required
-                slotProps={{
-                  htmlInput: { min: 0, step: 1 },
-                }}
-              />
+              {!formData.hasSize && (
+                <TextField
+                  label="Stock"
+                  type="number"
+                  value={formData.stock}
+                  onChange={(e) => handleInputChange('stock', e.target.value)}
+                  fullWidth
+                  required
+                  slotProps={{
+                    htmlInput: { min: 0, step: 1 },
+                  }}
+                />
+              )}
             </Stack>
+
+            {/* Size Management */}
+            <Box>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.hasSize}
+                    onChange={(e) => {
+                      const hasSize = e.target.checked;
+                      handleInputChange('hasSize', hasSize);
+                      if (!hasSize) {
+                        handleInputChange('sizes', []);
+                      }
+                    }}
+                  />
+                }
+                label="Product has sizes"
+              />
+            </Box>
+
+            {formData.hasSize && (
+              <Box>
+                <Typography variant="body2" color="text.secondary" mb={1}>
+                  Sizes & Stock
+                </Typography>
+                <Stack spacing={1.5}>
+                  {formData.sizes.map((size, index) => (
+                    <Stack key={index} direction="row" spacing={1} alignItems="center">
+                      <TextField
+                        label="Size name"
+                        size="small"
+                        value={size.name || ''}
+                        onChange={(e) => {
+                          const newSizes = [...formData.sizes];
+                          newSizes[index].name = e.target.value;
+                          handleInputChange('sizes', newSizes);
+                        }}
+                        sx={{ flex: 1 }}
+                        placeholder="e.g., S, M, L, XL"
+                      />
+                      <TextField
+                        label="Stock"
+                        size="small"
+                        type="number"
+                        value={size.stock || 0}
+                        onChange={(e) => {
+                          const newSizes = [...formData.sizes];
+                          newSizes[index].stock = parseInt(e.target.value) || 0;
+                          handleInputChange('sizes', newSizes);
+                        }}
+                        slotProps={{
+                          htmlInput: { min: 0, step: 1 },
+                        }}
+                        sx={{ width: 120 }}
+                      />
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => {
+                          const newSizes = formData.sizes.filter((_, i) => i !== index);
+                          handleInputChange('sizes', newSizes);
+                        }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Stack>
+                  ))}
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => {
+                      handleInputChange('sizes', [...formData.sizes, { name: '', stock: 0 }]);
+                    }}
+                    sx={{ alignSelf: 'flex-start' }}
+                  >
+                    Add Size
+                  </Button>
+                </Stack>
+              </Box>
+            )}
 
             <FormControl fullWidth>
               <InputLabel>Category</InputLabel>
