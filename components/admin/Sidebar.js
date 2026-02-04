@@ -73,7 +73,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }) {
             letterSpacing: '-0.5px',
           }}
         >
-          HK LUX Admin
+          CHZ Store Admin
         </Typography>
       </Box>
 
@@ -129,7 +129,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }) {
           Log Out
         </Button>
         <Typography variant="caption" color="text.secondary" display="block" textAlign="center">
-          © 2026 HK LUX
+          © 2026 CHZ Store
         </Typography>
       </Box>
     </Box>
