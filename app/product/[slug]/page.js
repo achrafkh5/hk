@@ -80,6 +80,14 @@ export default function ProductDetailPage() {
     return product?.stock || 0;
   }
 
+  // Get total stock across all sizes
+  function getTotalStock() {
+    if (product?.hasSize && product.sizes?.length > 0) {
+      return product.sizes.reduce((sum, size) => sum + (size.stock || 0), 0);
+    }
+    return product?.stock || 0;
+  }
+
   // Handle quantity change
   function handleQuantityChange(delta) {
     setQuantity((prev) => {
@@ -156,8 +164,9 @@ export default function ProductDetailPage() {
     );
   }
 
+  const totalStock = getTotalStock();
   const availableStock = getAvailableStock();
-  const isOutOfStock = !availableStock || availableStock < 1;
+  const isOutOfStock = !totalStock || totalStock < 1;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -287,9 +296,9 @@ export default function ProductDetailPage() {
                 suppressHydrationWarning
               >
                 {isOutOfStock ? t('outOfStock') : t('inStock')}
-                {!isOutOfStock && availableStock <= 10 && (
+                {!isOutOfStock && totalStock <= 10 && (
                   <span className="text-gray-500 ml-2">
-                    ({availableStock} {t('itemsLeft')})
+                    ({totalStock} {t('itemsLeft')})
                   </span>
                 )}
               </p>

@@ -62,7 +62,7 @@ function formatDate(dateString) {
 
 // Format price
 function formatPrice(price) {
-  return `$${parseFloat(price).toFixed(2)}`;
+  return `${parseFloat(price).toFixed(2)} DA`;
 }
 
 // Shorten order ID for display
