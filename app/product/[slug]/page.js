@@ -21,6 +21,11 @@ export default function ProductDetailPage() {
   const [selectedSize, setSelectedSize] = useState('');
   const [added, setAdded] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [colors, setColors] = useState([]);
+
+  useEffect(() => {
+    fetchColors();
+  }, []);
 
   useEffect(() => {
     if (params.slug) {
@@ -28,6 +33,18 @@ export default function ProductDetailPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.slug]);
+
+  async function fetchColors() {
+    try {
+      const res = await fetch('/api/colors');
+      if (res.ok) {
+        const data = await res.json();
+        setColors(data);
+      }
+    } catch (err) {
+      console.error('Error fetching colors:', err);
+    }
+  }
 
   // Set default color when product loads
   useEffect(() => {
@@ -59,10 +76,22 @@ export default function ProductDetailPage() {
     return field?.[lang] || field?.en || '';
   }
 
+  // Get color object by ID
+  function getColorById(colorId) {
+    return colors.find(c => c._id === colorId);
+  }
+
   // Get translated color name
-  function getColorName(colorName) {
-    const colorKey = `color${colorName}`;
-    return t(colorKey) || colorName;
+  function getColorName(colorId) {
+    const color = getColorById(colorId);
+    if (!color) return '';
+    return getText(color.name);
+  }
+
+  // Get color hex code
+  function getColorHex(colorId) {
+    const color = getColorById(colorId);
+    return color?.hex || '#000000';
   }
 
   // Format price
@@ -252,22 +281,9 @@ export default function ProductDetailPage() {
                     {t('availableColors')}:
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {product.colors.map((colorName, index) => {
-                      const colorMap = {
-                        'Black': '#000000',
-                        'White': '#FFFFFF',
-                        'Gray': '#9CA3AF',
-                        'Red': '#EF4444',
-                        'Blue': '#3B82F6',
-                        'Green': '#10B981',
-                        'Yellow': '#F59E0B',
-                        'Orange': '#F97316',
-                        'Pink': '#EC4899',
-                        'Purple': '#A855F7',
-                        'Brown': '#92400E',
-                        'Beige': '#D4A574',
-                      };
-                      const hex = colorMap[colorName] || '#000000';
+                    {product.colors.map((colorId, index) => {
+                      const hex = getColorHex(colorId);
+                      const colorName = getColorName(colorId);
                       return (
                         <div
                           key={index}
@@ -280,7 +296,7 @@ export default function ProductDetailPage() {
                               border: hex === '#FFFFFF' ? '1px solid #d1d5db' : 'none',
                             }}
                           />
-                          <span className="text-gray-700">{getColorName(colorName)}</span>
+                          <span className="text-gray-700">{colorName}</span>
                         </div>
                       );
                     })}
@@ -325,28 +341,15 @@ export default function ProductDetailPage() {
                         {t('selectColor')}:
                       </label>
                       <div className="flex flex-wrap gap-2">
-                        {product.colors.map((colorName, index) => {
-                          const colorMap = {
-                            'Black': '#000000',
-                            'White': '#FFFFFF',
-                            'Gray': '#9CA3AF',
-                            'Red': '#EF4444',
-                            'Blue': '#3B82F6',
-                            'Green': '#10B981',
-                            'Yellow': '#F59E0B',
-                            'Orange': '#F97316',
-                            'Pink': '#EC4899',
-                            'Purple': '#A855F7',
-                            'Brown': '#92400E',
-                            'Beige': '#D4A574',
-                          };
-                          const hex = colorMap[colorName] || '#000000';
-                          const isSelected = selectedColor === colorName;
+                        {product.colors.map((colorId, index) => {
+                          const hex = getColorHex(colorId);
+                          const colorName = getColorName(colorId);
+                          const isSelected = selectedColor === colorId;
                           
                           return (
                             <button
                               key={index}
-                              onClick={() => setSelectedColor(colorName)}
+                              onClick={() => setSelectedColor(colorId)}
                               className={`flex items-center gap-2 px-3 py-2 border-2 rounded transition-all ${
                                 isSelected
                                   ? 'border-gray-900 bg-gray-50'
@@ -360,7 +363,7 @@ export default function ProductDetailPage() {
                                   border: hex === '#FFFFFF' ? '1px solid #d1d5db' : 'none',
                                 }}
                               />
-                              <span className="text-sm text-gray-900">{getColorName(colorName)}</span>
+                              <span className="text-sm text-gray-900">{colorName}</span>
                             </button>
                           );
                         })}

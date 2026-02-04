@@ -50,9 +50,11 @@ function formatPrice(price) {
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [colors, setColors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [colorDialogOpen, setColorDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -60,6 +62,14 @@ export default function ProductsPage() {
   // Filters
   const [filterCategory, setFilterCategory] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+
+  // Color form state
+  const [colorForm, setColorForm] = useState({
+    nameEn: '',
+    nameFr: '',
+    nameAr: '',
+    hex: '',
+  });
 
   // Form state
   const [formData, setFormData] = useState({
@@ -80,25 +90,10 @@ export default function ProductsPage() {
   });
   const [uploading, setUploading] = useState(false);
 
-  // Available colors
-  const availableColors = [
-    { name: 'Black', hex: '#000000' },
-    { name: 'White', hex: '#FFFFFF' },
-    { name: 'Gray', hex: '#9CA3AF' },
-    { name: 'Red', hex: '#EF4444' },
-    { name: 'Blue', hex: '#3B82F6' },
-    { name: 'Green', hex: '#10B981' },
-    { name: 'Yellow', hex: '#F59E0B' },
-    { name: 'Orange', hex: '#F97316' },
-    { name: 'Pink', hex: '#EC4899' },
-    { name: 'Purple', hex: '#A855F7' },
-    { name: 'Brown', hex: '#92400E' },
-    { name: 'Beige', hex: '#D4A574' },
-  ];
-
-  // Fetch products and categories on mount
+  // Fetch products, categories and colors on mount
   useEffect(() => {
     fetchCategories();
+    fetchColors();
     fetchProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -118,6 +113,18 @@ export default function ProductsPage() {
       }
     } catch (err) {
       console.error('Error fetching categories:', err);
+    }
+  }
+
+  async function fetchColors() {
+    try {
+      const res = await fetch('/api/colors');
+      if (res.ok) {
+        const data = await res.json();
+        setColors(data);
+      }
+    } catch (err) {
+      console.error('Error fetching colors:', err);
     }
   }
 
@@ -384,6 +391,66 @@ export default function ProductsPage() {
     }
   }
 
+  // Color dialog handlers
+  function handleOpenColorDialog() {
+    setColorForm({
+      nameEn: '',
+      nameFr: '',
+      nameAr: '',
+      hex: '',
+    });
+    setColorDialogOpen(true);
+  }
+
+  function handleCloseColorDialog() {
+    setColorDialogOpen(false);
+    setColorForm({
+      nameEn: '',
+      nameFr: '',
+      nameAr: '',
+      hex: '',
+    });
+    setError('');
+  }
+
+  async function handleSaveColor() {
+    if (!colorForm.nameEn.trim() || !colorForm.hex.trim()) {
+      setError('Color name (EN) and hex code are required');
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/colors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: {
+            en: colorForm.nameEn.trim(),
+            fr: colorForm.nameFr.trim(),
+            ar: colorForm.nameAr.trim(),
+          },
+          hex: colorForm.hex.trim(),
+        }),
+      });
+
+      if (res.ok) {
+        handleCloseColorDialog();
+        await fetchColors();
+      } else {
+        const data = await res.json();
+        setError(data.error || 'Failed to create color');
+      }
+    } catch (err) {
+      console.error('Error creating color:', err);
+      setError('Failed to create color');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <Box>
       {/* Page Header */}
@@ -528,22 +595,9 @@ export default function ProductsPage() {
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                      {product.colors?.map((colorName, index) => {
-                        const colorMap = {
-                          'Black': '#000000',
-                          'White': '#FFFFFF',
-                          'Gray': '#9CA3AF',
-                          'Red': '#EF4444',
-                          'Blue': '#3B82F6',
-                          'Green': '#10B981',
-                          'Yellow': '#F59E0B',
-                          'Orange': '#F97316',
-                          'Pink': '#EC4899',
-                          'Purple': '#A855F7',
-                          'Brown': '#92400E',
-                          'Beige': '#D4A574',
-                        };
-                        const hex = colorMap[colorName] || '#000000';
+                      {product.colors?.map((colorId, index) => {
+                        const color = colors.find(c => c._id === colorId);
+                        if (!color) return null;
                         return (
                           <Box
                             key={index}
@@ -551,11 +605,11 @@ export default function ProductsPage() {
                               width: 20,
                               height: 20,
                               borderRadius: '50%',
-                              bgcolor: hex,
+                              bgcolor: color.hex,
                               border: '1px solid',
-                              borderColor: hex === '#FFFFFF' ? 'grey.400' : 'grey.300',
+                              borderColor: color.hex === '#FFFFFF' ? 'grey.400' : 'grey.300',
                             }}
-                            title={colorName}
+                            title={color.name?.en || 'Unnamed'}
                           />
                         );
                       })}
@@ -881,20 +935,29 @@ export default function ProductsPage() {
 
             {/* Colors Selection */}
             <Box>
-              <Typography variant="body2" color="text.secondary" mb={1}>
-                Available Colors
-              </Typography>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+                <Typography variant="body2" color="text.secondary">
+                  Available Colors
+                </Typography>
+                <Button
+                  size="small"
+                  onClick={handleOpenColorDialog}
+                  variant="outlined"
+                >
+                  + Add Color
+                </Button>
+              </Stack>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {availableColors.map((color) => {
-                  const isSelected = formData.colors?.includes(color.name);
+                {colors.map((color) => {
+                  const isSelected = formData.colors?.includes(color._id);
                   return (
                     <Box
-                      key={color.name}
+                      key={color._id}
                       onClick={() => {
                         const currentColors = formData.colors || [];
                         const newColors = isSelected
-                          ? currentColors.filter(c => c !== color.name)
-                          : [...currentColors, color.name];
+                          ? currentColors.filter(c => c !== color._id)
+                          : [...currentColors, color._id];
                         handleInputChange('colors', newColors);
                       }}
                       sx={{
@@ -924,7 +987,7 @@ export default function ProductsPage() {
                           borderColor: color.hex === '#FFFFFF' ? 'grey.300' : 'transparent',
                         }}
                       />
-                      <Typography variant="body2">{color.name}</Typography>
+                      <Typography variant="body2">{color.name?.en || 'Unnamed'}</Typography>
                     </Box>
                   );
                 })}
@@ -979,6 +1042,85 @@ export default function ProductsPage() {
             disabled={saving}
           >
             {saving ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Color Dialog */}
+      <Dialog
+        open={colorDialogOpen}
+        onClose={handleCloseColorDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Add New Color</DialogTitle>
+        <DialogContent>
+          <Stack spacing={3} sx={{ mt: 1 }}>
+            {error && (
+              <Typography color="error" variant="body2">
+                {error}
+              </Typography>
+            )}
+
+            <TextField
+              label="Color Name (English)"
+              value={colorForm.nameEn}
+              onChange={(e) => setColorForm({ ...colorForm, nameEn: e.target.value })}
+              fullWidth
+              required
+              helperText="Required"
+            />
+
+            <TextField
+              label="Color Name (French)"
+              value={colorForm.nameFr}
+              onChange={(e) => setColorForm({ ...colorForm, nameFr: e.target.value })}
+              fullWidth
+            />
+
+            <TextField
+              label="Color Name (Arabic)"
+              value={colorForm.nameAr}
+              onChange={(e) => setColorForm({ ...colorForm, nameAr: e.target.value })}
+              fullWidth
+            />
+
+            <Stack direction="row" spacing={2} alignItems="flex-start">
+              <TextField
+                label="Hex Code"
+                value={colorForm.hex}
+                onChange={(e) => setColorForm({ ...colorForm, hex: e.target.value })}
+                placeholder="#000000"
+                fullWidth
+                required
+                helperText="Format: #RRGGBB or #RGB"
+              />
+              {colorForm.hex && /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(colorForm.hex) && (
+                <Box
+                  sx={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: 1,
+                    bgcolor: colorForm.hex,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    flexShrink: 0,
+                  }}
+                />
+              )}
+            </Stack>
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleCloseColorDialog} disabled={saving}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSaveColor}
+            disabled={saving || !colorForm.nameEn.trim() || !colorForm.hex.trim()}
+          >
+            {saving ? 'Adding...' : 'Add Color'}
           </Button>
         </DialogActions>
       </Dialog>

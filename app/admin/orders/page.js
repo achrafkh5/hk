@@ -85,6 +85,7 @@ function getProductName(name) {
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
+  const [colors, setColors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -99,11 +100,42 @@ export default function OrdersPage() {
   // Filter
   const [filterStatus, setFilterStatus] = useState('');
 
+  // Fetch colors on mount
+  useEffect(() => {
+    fetchColors();
+  }, []);
+
   // Fetch orders on mount and when filter changes
   useEffect(() => {
     fetchOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterStatus]);
+
+  async function fetchColors() {
+    try {
+      const res = await fetch('/api/colors');
+      if (res.ok) {
+        const data = await res.json();
+        setColors(data);
+      }
+    } catch (err) {
+      console.error('Error fetching colors:', err);
+    }
+  }
+
+  function getColorById(colorId) {
+    return colors.find(c => c._id === colorId);
+  }
+
+  function getColorName(colorId) {
+    const color = getColorById(colorId);
+    return color?.name?.en || colorId || '-';
+  }
+
+  function getColorHex(colorId) {
+    const color = getColorById(colorId);
+    return color?.hex || '#000000';
+  }
 
   async function fetchOrders() {
     try {
@@ -579,13 +611,23 @@ export default function OrdersPage() {
                                 onChange={(e) => handleItemChange(index, 'color', e.target.value)}
                                 size="small"
                                 fullWidth
+                                disabled
+                                helperText="Color cannot be edited"
                               />
                             ) : item.color ? (
-                              <Chip 
-                                label={item.color} 
-                                size="small" 
-                                variant="outlined"
-                              />
+                              <Stack direction="row" spacing={1} alignItems="center">
+                                <Box
+                                  sx={{
+                                    width: 20,
+                                    height: 20,
+                                    borderRadius: '50%',
+                                    bgcolor: getColorHex(item.color),
+                                    border: '1px solid',
+                                    borderColor: getColorHex(item.color) === '#FFFFFF' ? 'grey.300' : 'transparent',
+                                  }}
+                                />
+                                <Typography variant="body2">{getColorName(item.color)}</Typography>
+                              </Stack>
                             ) : (
                               '-'
                             )}
