@@ -1,8 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
+import { requireAdmin } from '@/lib/auth-helper';
 
 // GET all orders
 export async function GET(request) {
+  // Check admin authentication
+  const authResult = await requireAdmin();
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');

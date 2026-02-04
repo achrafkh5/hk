@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
+import { requireAdmin } from '@/lib/auth-helper';
 
 export async function GET() {
+  // Check admin authentication
+  const authResult = await requireAdmin();
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const db = await getDb();
     

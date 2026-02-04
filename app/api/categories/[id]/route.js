@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
+import { requireAdmin } from '@/lib/auth-helper';
 
 // GET single category
 export async function GET(request, { params }) {
@@ -38,6 +39,12 @@ export async function GET(request, { params }) {
 
 // PUT update category
 export async function PUT(request, { params }) {
+  // Check admin authentication
+  const authResult = await requireAdmin();
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -106,6 +113,12 @@ export async function PUT(request, { params }) {
 
 // DELETE category
 export async function DELETE(request, { params }) {
+  // Check admin authentication
+  const authResult = await requireAdmin();
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const { id } = await params;
 

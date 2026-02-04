@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
+import { requireAdmin } from '@/lib/auth-helper';
 
 // GET all products
 export async function GET(request) {
@@ -51,6 +52,12 @@ export async function GET(request) {
 
 // POST create product
 export async function POST(request) {
+  // Check admin authentication
+  const authResult = await requireAdmin();
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const body = await request.json();
     const { name, description, price, stock, categoryId, images, colors, hasSize, sizes, active } = body;

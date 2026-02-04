@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
+import { requireAdmin } from '@/lib/auth-helper';
 
 export async function POST(req) {
+  // Check admin authentication
+  const authResult = await requireAdmin();
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     console.log("📤 Upload request received");
     

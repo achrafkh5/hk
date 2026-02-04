@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
+import { requireAdmin } from '@/lib/auth-helper';
 
 // GET all categories
 export async function GET() {
@@ -23,6 +24,12 @@ export async function GET() {
 
 // POST create category
 export async function POST(request) {
+  // Check admin authentication
+  const authResult = await requireAdmin();
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const body = await request.json();
     const { name, slug, imageUrl } = body;

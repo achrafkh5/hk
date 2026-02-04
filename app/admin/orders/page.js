@@ -24,7 +24,12 @@ import {
   FormControl,
   InputLabel,
   Divider,
+  TextField,
+  IconButton,
+  Alert,
 } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 
 const ORDER_STATUSES = [
   { value: 'pending', label: 'Pending' },
@@ -85,6 +90,11 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [newStatus, setNewStatus] = useState('');
   const [saving, setSaving] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editedOrder, setEditedOrder] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState(null);
+  const [error, setError] = useState('');
 
   // Filter
   const [filterStatus, setFilterStatus] = useState('');
@@ -119,6 +129,14 @@ export default function OrdersPage() {
   function handleOpenDialog(order) {
     setSelectedOrder(order);
     setNewStatus(order.status || 'pending');
+    setEditedOrder({
+      customer: { ...order.customer },
+      deliveryPrice: order.deliveryPrice || 0,
+      deliveryType: order.deliveryType || 'domicile',
+      items: [...order.items],
+    });
+    setEditMode(false);
+    setError('');
     setDialogOpen(true);
   }
 
@@ -126,12 +144,107 @@ export default function OrdersPage() {
     setDialogOpen(false);
     setSelectedOrder(null);
     setNewStatus('');
+    setEditMode(false);
+    setEditedOrder(null);
+    setError('');
+  }
+
+  function handleEditModeToggle() {
+    setEditMode(!editMode);
+    setError('');
+  }
+
+  function handleCustomerChange(field, value) {
+    setEditedOrder({
+      ...editedOrder,
+      customer: {
+        ...editedOrder.customer,
+        [field]: value,
+      },
+    });
+  }
+
+  function handleItemChange(index, field, value) {
+    const newItems = [...editedOrder.items];
+    newItems[index] = {
+      ...newItems[index],
+      [field]: field === 'qty' || field === 'price' ? parseFloat(value) || 0 : value,
+    };
+    setEditedOrder({
+      ...editedOrder,
+      items: newItems,
+    });
+  }
+
+  function handleDeleteItem(index) {
+    const newItems = editedOrder.items.filter((_, i) => i !== index);
+    if (newItems.length === 0) {
+      setError('Order must have at least one item');
+      return;
+    }
+    setEditedOrder({
+      ...editedOrder,
+      items: newItems,
+    });
+  }
+
+  function calculateTotal() {
+    const subtotal = editedOrder.items.reduce((sum, item) => {
+      return sum + (item.price * item.qty);
+    }, 0);
+    return subtotal + (editedOrder.deliveryPrice || 0);
+  }
+
+  async function handleUpdateOrder() {
+    if (!selectedOrder || !editedOrder) return;
+
+    if (editedOrder.items.length === 0) {
+      setError('Order must have at least one item');
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+    try {
+      const subtotal = editedOrder.items.reduce((sum, item) => {
+        return sum + (item.price * item.qty);
+      }, 0);
+      const total = subtotal + (editedOrder.deliveryPrice || 0);
+
+      const res = await fetch(`/api/orders/${selectedOrder._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: newStatus,
+          customer: editedOrder.customer,
+          items: editedOrder.items,
+          subtotal,
+          deliveryPrice: editedOrder.deliveryPrice,
+          deliveryType: editedOrder.deliveryType,
+          total,
+        }),
+      });
+
+      if (res.ok) {
+        handleCloseDialog();
+        fetchOrders();
+      } else {
+        const data = await res.json();
+        setError(data.error || 'Failed to update order');
+      }
+    } catch (err) {
+      console.error('Error updating order:', err);
+      setError('Failed to update order');
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function handleUpdateStatus() {
     if (!selectedOrder || !newStatus) return;
 
     setSaving(true);
+    setError('');
     try {
       const res = await fetch(`/api/orders/${selectedOrder._id}`, {
         method: 'PUT',
@@ -144,11 +257,45 @@ export default function OrdersPage() {
         fetchOrders();
       } else {
         const data = await res.json();
-        alert(data.error || 'Failed to update order');
+        setError(data.error || 'Failed to update order');
       }
     } catch (err) {
       console.error('Error updating order:', err);
-      alert('Failed to update order');
+      setError('Failed to update order');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function handleOpenDeleteDialog(order) {
+    setOrderToDelete(order);
+    setDeleteDialogOpen(true);
+  }
+
+  function handleCloseDeleteDialog() {
+    setDeleteDialogOpen(false);
+    setOrderToDelete(null);
+  }
+
+  async function handleDeleteOrder() {
+    if (!orderToDelete) return;
+
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/orders/${orderToDelete._id}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        handleCloseDeleteDialog();
+        fetchOrders();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to delete order');
+      }
+    } catch (err) {
+      console.error('Error deleting order:', err);
+      alert('Failed to delete order');
     } finally {
       setSaving(false);
     }
@@ -242,12 +389,22 @@ export default function OrdersPage() {
                     </Typography>
                   </TableCell>
                   <TableCell align="right">
-                    <Button
-                      size="small"
-                      onClick={() => handleOpenDialog(order)}
-                    >
-                      View
-                    </Button>
+                    <Stack direction="row" spacing={1} justifyContent="flex-end">
+                      <Button
+                        size="small"
+                        onClick={() => handleOpenDialog(order)}
+                        startIcon={<EditIcon />}
+                      >
+                        Edit
+                      </Button>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleOpenDeleteDialog(order)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Stack>
                   </TableCell>
                 </TableRow>
               ))
@@ -260,38 +417,128 @@ export default function OrdersPage() {
       <Dialog
         open={dialogOpen}
         onClose={handleCloseDialog}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
       >
         <DialogTitle>
           Order #{shortenId(selectedOrder?._id)}
         </DialogTitle>
         <DialogContent>
-          {selectedOrder && (
+          {selectedOrder && editedOrder && (
             <Stack spacing={3} sx={{ mt: 1 }}>
+              {error && (
+                <Alert severity="error" onClose={() => setError('')}>
+                  {error}
+                </Alert>
+              )}
+
               {/* Customer Info */}
               <Box>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                   Customer
                 </Typography>
-                <Typography variant="body1">
-                  {selectedOrder.customer?.name || '-'}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {selectedOrder.customer?.phone || '-'}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  {selectedOrder.customer?.wilaya && (
-                    <>
-                      {selectedOrder.customer.wilaya}
-                      {selectedOrder.customer?.daira && `, ${selectedOrder.customer.daira}`}
-                      {selectedOrder.customer?.commune && `, ${selectedOrder.customer.commune}`}
-                    </>
-                  )}
-                </Typography>
+                {editMode ? (
+                  <Stack spacing={2}>
+                    <TextField
+                      label="Name"
+                      value={editedOrder.customer?.name || ''}
+                      onChange={(e) => handleCustomerChange('name', e.target.value)}
+                      fullWidth
+                      size="small"
+                    />
+                    <TextField
+                      label="Phone"
+                      value={editedOrder.customer?.phone || ''}
+                      onChange={(e) => handleCustomerChange('phone', e.target.value)}
+                      fullWidth
+                      size="small"
+                    />
+                    <TextField
+                      label="Wilaya"
+                      value={editedOrder.customer?.wilaya || ''}
+                      onChange={(e) => handleCustomerChange('wilaya', e.target.value)}
+                      fullWidth
+                      size="small"
+                    />
+                    <TextField
+                      label="Daira"
+                      value={editedOrder.customer?.daira || ''}
+                      onChange={(e) => handleCustomerChange('daira', e.target.value)}
+                      fullWidth
+                      size="small"
+                    />
+                    <TextField
+                      label="Commune"
+                      value={editedOrder.customer?.commune || ''}
+                      onChange={(e) => handleCustomerChange('commune', e.target.value)}
+                      fullWidth
+                      size="small"
+                    />
+                  </Stack>
+                ) : (
+                  <>
+                    <Typography variant="body1">
+                      {selectedOrder.customer?.name || '-'}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {selectedOrder.customer?.phone || '-'}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                      {selectedOrder.customer?.wilaya && (
+                        <>
+                          {selectedOrder.customer.wilaya}
+                          {selectedOrder.customer?.daira && `, ${selectedOrder.customer.daira}`}
+                          {selectedOrder.customer?.commune && `, ${selectedOrder.customer.commune}`}
+                        </>
+                      )}
+                    </Typography>
+                  </>
+                )}
               </Box>
 
               <Divider />
+
+              {/* Delivery Info */}
+              {editMode && (
+                <>
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Delivery
+                    </Typography>
+                    <Stack direction="row" spacing={2}>
+                      <FormControl size="small" fullWidth>
+                        <InputLabel>Delivery Type</InputLabel>
+                        <Select
+                          value={editedOrder.deliveryType}
+                          label="Delivery Type"
+                          onChange={(e) => setEditedOrder({
+                            ...editedOrder,
+                            deliveryType: e.target.value
+                          })}
+                        >
+                          <MenuItem value="domicile">Domicile</MenuItem>
+                          <MenuItem value="stopdesk">Stop Desk</MenuItem>
+                        </Select>
+                      </FormControl>
+                      <TextField
+                        label="Delivery Price"
+                        type="number"
+                        value={editedOrder.deliveryPrice}
+                        onChange={(e) => setEditedOrder({
+                          ...editedOrder,
+                          deliveryPrice: parseFloat(e.target.value) || 0
+                        })}
+                        fullWidth
+                        size="small"
+                        InputProps={{
+                          endAdornment: 'DA'
+                        }}
+                      />
+                    </Stack>
+                  </Box>
+                  <Divider />
+                </>
+              )}
 
               {/* Order Items */}
               <Box>
@@ -307,14 +554,33 @@ export default function OrdersPage() {
                         <TableCell>Size</TableCell>
                         <TableCell align="right">Qty</TableCell>
                         <TableCell align="right">Price</TableCell>
+                        {editMode && <TableCell align="right">Actions</TableCell>}
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {selectedOrder.items?.map((item, index) => (
+                      {(editMode ? editedOrder.items : selectedOrder.items)?.map((item, index) => (
                         <TableRow key={index}>
-                          <TableCell>{getProductName(item.name)}</TableCell>
                           <TableCell>
-                            {item.color ? (
+                            {editMode ? (
+                              <TextField
+                                value={getProductName(item.name)}
+                                size="small"
+                                disabled
+                                fullWidth
+                              />
+                            ) : (
+                              getProductName(item.name)
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {editMode ? (
+                              <TextField
+                                value={item.color || ''}
+                                onChange={(e) => handleItemChange(index, 'color', e.target.value)}
+                                size="small"
+                                fullWidth
+                              />
+                            ) : item.color ? (
                               <Chip 
                                 label={item.color} 
                                 size="small" 
@@ -325,7 +591,14 @@ export default function OrdersPage() {
                             )}
                           </TableCell>
                           <TableCell>
-                            {item.size ? (
+                            {editMode ? (
+                              <TextField
+                                value={item.size || ''}
+                                onChange={(e) => handleItemChange(index, 'size', e.target.value)}
+                                size="small"
+                                fullWidth
+                              />
+                            ) : item.size ? (
                               <Chip 
                                 label={item.size} 
                                 size="small" 
@@ -335,10 +608,46 @@ export default function OrdersPage() {
                               '-'
                             )}
                           </TableCell>
-                          <TableCell align="right">{item.qty}</TableCell>
                           <TableCell align="right">
-                            {formatPrice(item.price * item.qty)}
+                            {editMode ? (
+                              <TextField
+                                type="number"
+                                value={item.qty}
+                                onChange={(e) => handleItemChange(index, 'qty', e.target.value)}
+                                size="small"
+                                inputProps={{ min: 1 }}
+                                sx={{ width: 80 }}
+                              />
+                            ) : (
+                              item.qty
+                            )}
                           </TableCell>
+                          <TableCell align="right">
+                            {editMode ? (
+                              <TextField
+                                type="number"
+                                value={item.price}
+                                onChange={(e) => handleItemChange(index, 'price', e.target.value)}
+                                size="small"
+                                inputProps={{ min: 0, step: 0.01 }}
+                                sx={{ width: 100 }}
+                              />
+                            ) : (
+                              formatPrice(item.price * item.qty)
+                            )}
+                          </TableCell>
+                          {editMode && (
+                            <TableCell align="right">
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={() => handleDeleteItem(index)}
+                                disabled={editedOrder.items.length === 1}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </TableCell>
+                          )}
                         </TableRow>
                       ))}
                     </TableBody>
@@ -352,7 +661,7 @@ export default function OrdersPage() {
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="subtitle2">Total</Typography>
                 <Typography variant="subtitle1" fontWeight={600}>
-                  {formatPrice(selectedOrder.total || 0)}
+                  {editMode ? formatPrice(calculateTotal()) : formatPrice(selectedOrder.total || 0)}
                 </Typography>
               </Box>
 
@@ -361,12 +670,13 @@ export default function OrdersPage() {
               {/* Status Update */}
               <Box>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  Update Status
+                  Status
                 </Typography>
                 <FormControl fullWidth size="small">
                   <Select
                     value={newStatus}
                     onChange={(e) => setNewStatus(e.target.value)}
+                    disabled={editMode}
                   >
                     {ORDER_STATUSES.map((status) => (
                       <MenuItem key={status.value} value={status.value}>
@@ -388,12 +698,70 @@ export default function OrdersPage() {
           <Button onClick={handleCloseDialog} disabled={saving}>
             Close
           </Button>
+          {!editMode ? (
+            <>
+              <Button
+                variant="outlined"
+                onClick={handleEditModeToggle}
+                disabled={saving}
+              >
+                Edit Order
+              </Button>
+              <Button
+                variant="contained"
+                onClick={handleUpdateStatus}
+                disabled={saving || newStatus === selectedOrder?.status}
+              >
+                {saving ? 'Saving...' : 'Update Status'}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                onClick={handleEditModeToggle}
+                disabled={saving}
+              >
+                Cancel Edit
+              </Button>
+              <Button
+                variant="contained"
+                onClick={handleUpdateOrder}
+                disabled={saving}
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </>
+          )}
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Delete Order</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete order #{shortenId(orderToDelete?._id)}?
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteDialog} disabled={saving}>
+            Cancel
+          </Button>
           <Button
             variant="contained"
-            onClick={handleUpdateStatus}
-            disabled={saving || newStatus === selectedOrder?.status}
+            color="error"
+            onClick={handleDeleteOrder}
+            disabled={saving}
           >
-            {saving ? 'Saving...' : 'Update Status'}
+            {saving ? 'Deleting...' : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>
