@@ -94,6 +94,7 @@ export async function POST(request) {
         phone: customer.phone,
         wilaya: customer.wilaya,
         commune: customer.commune,
+        ...(customer.address && { address: customer.address }),
       },
       status: 'pending',
       createdAt: new Date(),

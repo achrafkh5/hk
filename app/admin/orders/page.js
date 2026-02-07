@@ -499,6 +499,15 @@ export default function OrdersPage() {
                       fullWidth
                       size="small"
                     />
+                    <TextField
+                      label="Address"
+                      value={editedOrder.customer?.address || ''}
+                      onChange={(e) => handleCustomerChange('address', e.target.value)}
+                      fullWidth
+                      size="small"
+                      multiline
+                      rows={2}
+                    />
                   </Stack>
                 ) : (
                   <>
@@ -516,6 +525,11 @@ export default function OrdersPage() {
                         </>
                       )}
                     </Typography>
+                    {selectedOrder.customer?.address && (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        {selectedOrder.customer.address}
+                      </Typography>
+                    )}
                   </>
                 )}
               </Box>

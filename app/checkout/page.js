@@ -83,6 +83,7 @@ export default function CheckoutPage() {
     wilaya: '',
     commune: '',
     deliveryType: 'stopdesk',
+    address: '',
   });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -233,6 +234,10 @@ export default function CheckoutPage() {
       setError(t('communeRequired') || 'Commune is required');
       return;
     }
+    if (formData.deliveryType === 'domicile' && !formData.address.trim()) {
+      setError(t('addressRequired') || 'Address is required for home delivery');
+      return;
+    }
     if (!isDeliveryAvailable) {
       setError('Delivery not available for selected wilaya');
       return;
@@ -283,6 +288,7 @@ export default function CheckoutPage() {
         phone: formData.phone.trim(),
         wilaya: wilayaName || formData.wilaya,
         commune: communeName,
+        ...(formData.deliveryType === 'domicile' && formData.address.trim() && { address: formData.address.trim() }),
       },
     };
 
@@ -484,6 +490,28 @@ export default function CheckoutPage() {
                   )}
                 </div>
 
+                {/* Address field - shown only for domicile delivery */}
+                {formData.deliveryType === 'domicile' && availableDeliveryTypes.domicile && (
+                  <div>
+                    <label
+                      htmlFor="address"
+                      className="block text-sm text-gray-700 mb-1"
+                      suppressHydrationWarning
+                    >
+                      {t('address') || 'Address'} *
+                    </label>
+                    <input
+                      type="text"
+                      id="address"
+                      value={formData.address}
+                      onChange={(e) => handleInputChange('address', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:border-gray-500"
+                      placeholder={t('addressPlaceholder') || 'Enter your full address'}
+                      required
+                    />
+                  </div>
+                )}
+
                 {/* Order Summary - Mobile Only (before Place Order button) */}
                 <div className="lg:hidden">
                   <h2 className="text-lg font-medium text-gray-900 mb-4" suppressHydrationWarning>
@@ -509,6 +537,11 @@ export default function CheckoutPage() {
                           {item.color && (
                             <span className="text-gray-500 text-xs">
                               {t('color')}: {getColorName(item.color)}
+                            </span>
+                          )}
+                          {item.size && (
+                            <span className="text-gray-500 text-xs block">
+                              {t('size')}: {item.size}
                             </span>
                           )}
                         </div>
@@ -583,6 +616,11 @@ export default function CheckoutPage() {
                       {item.color && (
                         <span className="text-gray-500 text-xs">
                           {t('color')}: {getColorName(item.color)}
+                        </span>
+                      )}
+                      {item.size && (
+                        <span className="text-gray-500 text-xs block">
+                          {t('size')}: {item.size}
                         </span>
                       )}
                     </div>
