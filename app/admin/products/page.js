@@ -87,6 +87,7 @@ export default function ProductsPage() {
     hasSize: false,
     sizes: [],
     active: true,
+    featured: false,
   });
   const [uploading, setUploading] = useState(false);
 
@@ -177,6 +178,7 @@ export default function ProductsPage() {
         hasSize: product.hasSize || false,
         sizes: product.sizes || [],
         active: product.active !== false,
+        featured: product.featured || false,
       });
     } else {
       // Create mode
@@ -196,6 +198,7 @@ export default function ProductsPage() {
         hasSize: false,
         sizes: [],
         active: true,
+        featured: false,
       });
     }
     setError('');
@@ -320,6 +323,7 @@ export default function ProductsPage() {
       hasSize: formData.hasSize,
       sizes: formData.hasSize ? formData.sizes : [],
       active: formData.active,
+      featured: formData.featured,
     };
 
     console.log('Saving product with images:', payload.images);
@@ -1002,6 +1006,16 @@ export default function ProductsPage() {
                 />
               }
               label="Active"
+            />
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formData.featured}
+                  onChange={(e) => handleInputChange('featured', e.target.checked)}
+                />
+              }
+              label="Featured"
             />
           </Stack>
         </DialogContent>

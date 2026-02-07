@@ -60,7 +60,7 @@ export async function POST(request) {
 
   try {
     const body = await request.json();
-    const { name, description, price, stock, categoryId, images, colors, hasSize, sizes, active } = body;
+    const { name, description, price, stock, categoryId, images, colors, hasSize, sizes, active, featured } = body;
 
     if (!name?.en || price === undefined || stock === undefined) {
       return NextResponse.json(
@@ -90,6 +90,7 @@ export async function POST(request) {
       hasSize: hasSize || false,
       sizes: hasSize && Array.isArray(sizes) ? sizes : [],
       active: active !== false,
+      featured: featured || false,
       createdAt: new Date(),
     };
 
