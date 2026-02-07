@@ -87,6 +87,7 @@ export default function CheckoutPage() {
   });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [orderPlaced, setOrderPlaced] = useState(false);
   const [communes, setCommunes] = useState([]);
   const [deliveryPrice, setDeliveryPrice] = useState(0);
   const [availableDeliveryTypes, setAvailableDeliveryTypes] = useState({ domicile: true, stopdesk: true });
@@ -109,12 +110,12 @@ export default function CheckoutPage() {
     fetchColors();
   }, []);
 
-  // Redirect to cart if empty
+  // Redirect to cart if empty (but not if order was just placed)
   useEffect(() => {
-    if (cart.length === 0) {
+    if (cart.length === 0 && !orderPlaced) {
       router.push('/cart');
     }
-  }, [cart, router]);
+  }, [cart, router, orderPlaced]);
 
   // Calculate delivery price when wilaya or delivery type changes
   useEffect(() => {
@@ -301,6 +302,7 @@ export default function CheckoutPage() {
 
       if (res.ok) {
         const data = await res.json();
+        setOrderPlaced(true);
         clearCart();
         router.push('/order-success');
       } else {
