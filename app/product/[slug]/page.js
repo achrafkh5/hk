@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/LanguageContext';
@@ -11,6 +11,7 @@ import Footer from '@/components/client/Footer';
 
 export default function ProductDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const { lang, t } = useLanguage();
   const { addToCart } = useCart();
 
@@ -153,6 +154,42 @@ export default function ProductDetailPage() {
 
     // Reset "added" state after 2 seconds
     setTimeout(() => setAdded(false), 2000);
+  }
+
+  // Handle order now - go directly to checkout
+  function handleOrderNow() {
+    if (!product) return;
+
+    // Check available stock
+    const availableStock = getAvailableStock();
+    if (availableStock < 1) return;
+
+    // If product has colors, require color selection
+    if (product.colors && product.colors.length > 0 && !selectedColor) {
+      alert(t('selectColor'));
+      return;
+    }
+
+    // If product has sizes, require size selection
+    if (product.hasSize && product.sizes && product.sizes.length > 0 && !selectedSize) {
+      alert(t('selectSize'));
+      return;
+    }
+
+    // Store product details in sessionStorage for checkout
+    const orderItem = {
+      productId: product._id,
+      name: product.name,
+      price: product.price,
+      image: product.images?.[0] || '',
+      qty: quantity,
+      color: selectedColor || null,
+      size: selectedSize || null,
+    };
+    sessionStorage.setItem('directOrder', JSON.stringify(orderItem));
+    
+    // Navigate to checkout
+    router.push('/checkout');
   }
 
   if (loading) {
@@ -430,18 +467,27 @@ export default function ProductDetailPage() {
                     </div>
                   </div>
 
-                  {/* Add to Cart Button */}
-                  <button
-                    onClick={handleAddToCart}
-                    className={`w-full py-3 text-sm font-medium transition-colors ${
-                      added
-                        ? 'bg-green-600 text-white'
-                        : 'bg-gray-900 text-white hover:bg-gray-800'
-                    }`}
-                    suppressHydrationWarning
-                  >
-                    {added ? '✓ Added to Cart' : t('addToCart')}
-                  </button>
+                  {/* Add to Cart and Order Now Buttons */}
+                  <div className="space-y-2">
+                    <button
+                      onClick={handleAddToCart}
+                      className={`w-full py-3 text-sm font-medium transition-colors ${
+                        added
+                          ? 'bg-green-600 text-white'
+                          : 'bg-gray-900 text-white hover:bg-gray-800'
+                      }`}
+                      suppressHydrationWarning
+                    >
+                      {added ? '✓ Added to Cart' : t('addToCart')}
+                    </button>
+                    <button
+                      onClick={handleOrderNow}
+                      className="w-full py-3 text-sm font-medium bg-white text-gray-900 border-2 border-gray-900 hover:bg-gray-50 transition-colors"
+                      suppressHydrationWarning
+                    >
+                      {t('orderNow') || 'Order Now'}
+                    </button>
+                  </div>
                 </div>
               )}
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useLanguage } from '@/lib/LanguageContext';
 import { useCart } from '@/lib/CartContext';
 import Header from '@/components/client/Header';
@@ -93,6 +94,34 @@ export default function CheckoutPage() {
   const [availableDeliveryTypes, setAvailableDeliveryTypes] = useState({ domicile: true, stopdesk: true });
   const [isDeliveryAvailable, setIsDeliveryAvailable] = useState(true);
   const [colors, setColors] = useState([]);
+  const [directOrderItem, setDirectOrderItem] = useState(null);
+  const [isCheckingDirectOrder, setIsCheckingDirectOrder] = useState(true);
+
+  // Check for direct order on mount
+  useEffect(() => {
+    const directOrder = sessionStorage.getItem('directOrder');
+    if (directOrder) {
+      try {
+        const item = JSON.parse(directOrder);
+        setDirectOrderItem(item);
+        sessionStorage.removeItem('directOrder');
+      } catch (err) {
+        console.error('Error parsing direct order:', err);
+      }
+    }
+    setIsCheckingDirectOrder(false);
+  }, []);
+
+  // Get items - either from cart or direct order
+  const items = directOrderItem ? [directOrderItem] : cart;
+
+  // Calculate total
+  const getTotal = () => {
+    if (directOrderItem) {
+      return directOrderItem.price * directOrderItem.qty;
+    }
+    return getCartTotal();
+  };
 
   // Fetch colors on mount
   useEffect(() => {
@@ -110,12 +139,12 @@ export default function CheckoutPage() {
     fetchColors();
   }, []);
 
-  // Redirect to cart if empty (but not if order was just placed)
+  // Redirect to cart if empty (but not if order was just placed or direct order or still checking)
   useEffect(() => {
-    if (cart.length === 0 && !orderPlaced) {
+    if (!isCheckingDirectOrder && items.length === 0 && !orderPlaced) {
       router.push('/cart');
     }
-  }, [cart, router, orderPlaced]);
+  }, [items.length, router, orderPlaced, isCheckingDirectOrder]);
 
   // Calculate delivery price when wilaya or delivery type changes
   useEffect(() => {
@@ -272,7 +301,7 @@ export default function CheckoutPage() {
     }
 
     const orderPayload = {
-      items: cart.map((item) => ({
+      items: items.map((item) => ({
           productId: item.productId,
           name: item.name,
           price: item.price,
@@ -280,10 +309,10 @@ export default function CheckoutPage() {
           color: item.color || null,
           size: item.size || null,
         })),
-      subtotal: getCartTotal(),
+      subtotal: cartTotal,
       deliveryPrice: deliveryPrice,
       deliveryType: formData.deliveryType,
-      total: getCartTotal() + deliveryPrice,
+      total: cartTotal + deliveryPrice,
       customer: {
         name: formData.name.trim(),
         phone: formData.phone.trim(),
@@ -303,7 +332,9 @@ export default function CheckoutPage() {
       if (res.ok) {
         const data = await res.json();
         setOrderPlaced(true);
-        clearCart();
+        if (!directOrderItem) {
+          clearCart();
+        }
         router.push('/order-success');
       } else {
         const data = await res.json();
@@ -317,10 +348,8 @@ export default function CheckoutPage() {
     }
   }
 
-  const cartTotal = getCartTotal();
-
-  // Don't render if cart is empty (will redirect)
-  if (cart.length === 0) {
+  const cartTotal = getTotal();
+  if (items.length === 0) {
     return null;
   }
 
@@ -523,29 +552,45 @@ export default function CheckoutPage() {
                   <div className="bg-gray-50 p-4 border border-gray-200">
                     {/* Items */}
                     <div className="space-y-3 mb-4">
-                      {cart.map((item, index) => (
+                      {items.map((item, index) => (
                         <div
                           key={`${item.productId}-${item.color || 'no-color'}-${index}`}
-                          className="text-sm"
+                          className="flex gap-3"
                         >
-                          <div className="flex justify-between">
-                            <span className="text-gray-700">
-                              {getProductName(item)} × {item.qty}
-                            </span>
-                            <span className="text-gray-900">
-                              {formatPrice(item.price * item.qty)}
-                            </span>
+                          {/* Product Image */}
+                          {item.image && (
+                            <div className="w-16 h-16 bg-gray-100 relative overflow-hidden flex-shrink-0">
+                              <Image
+                                src={item.image}
+                                alt={getProductName(item)}
+                                fill
+                                className="object-cover"
+                                sizes="64px"
+                              />
+                            </div>
+                          )}
+                          
+                          {/* Product Details */}
+                          <div className="flex-1 text-sm">
+                            <div className="flex justify-between mb-1">
+                              <span className="text-gray-700">
+                                {getProductName(item)} × {item.qty}
+                              </span>
+                              <span className="text-gray-900">
+                                {formatPrice(item.price * item.qty)}
+                              </span>
+                            </div>
+                            {item.color && (
+                              <span className="text-gray-500 text-xs block">
+                                {t('color')}: {getColorName(item.color)}
+                              </span>
+                            )}
+                            {item.size && (
+                              <span className="text-gray-500 text-xs block">
+                                {t('size')}: {item.size}
+                              </span>
+                            )}
                           </div>
-                          {item.color && (
-                            <span className="text-gray-500 text-xs">
-                              {t('color')}: {getColorName(item.color)}
-                            </span>
-                          )}
-                          {item.size && (
-                            <span className="text-gray-500 text-xs block">
-                              {t('size')}: {item.size}
-                            </span>
-                          )}
                         </div>
                       ))}
                     </div>
@@ -585,10 +630,10 @@ export default function CheckoutPage() {
                 </button>
 
                 <Link
-                  href="/cart"
+                  href="/shop"
                   className="block text-center text-sm text-gray-600 hover:text-gray-900"
                 >
-                  ← {t('backToCart')}
+                  ← {t('backToShop')}
                 </Link>
               </form>
             </div>
@@ -602,29 +647,45 @@ export default function CheckoutPage() {
               <div className="bg-gray-50 p-4 border border-gray-200">
                 {/* Items */}
                 <div className="space-y-3 mb-4">
-                  {cart.map((item, index) => (
+                  {items.map((item, index) => (
                     <div
                       key={`${item.productId}-${item.color || 'no-color'}-${index}`}
-                      className="text-sm"
+                      className="flex gap-3"
                     >
-                      <div className="flex justify-between">
-                        <span className="text-gray-700">
-                          {getProductName(item)} × {item.qty}
-                        </span>
-                        <span className="text-gray-900">
-                          {formatPrice(item.price * item.qty)}
-                        </span>
+                      {/* Product Image */}
+                      {item.image && (
+                        <div className="w-16 h-16 bg-gray-100 relative overflow-hidden flex-shrink-0">
+                          <Image
+                            src={item.image}
+                            alt={getProductName(item)}
+                            fill
+                            className="object-cover"
+                            sizes="64px"
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Product Details */}
+                      <div className="flex-1 text-sm">
+                        <div className="flex justify-between mb-1">
+                          <span className="text-gray-700">
+                            {getProductName(item)} × {item.qty}
+                          </span>
+                          <span className="text-gray-900">
+                            {formatPrice(item.price * item.qty)}
+                          </span>
+                        </div>
+                        {item.color && (
+                          <span className="text-gray-500 text-xs block">
+                            {t('color')}: {getColorName(item.color)}
+                          </span>
+                        )}
+                        {item.size && (
+                          <span className="text-gray-500 text-xs block">
+                            {t('size')}: {item.size}
+                          </span>
+                        )}
                       </div>
-                      {item.color && (
-                        <span className="text-gray-500 text-xs">
-                          {t('color')}: {getColorName(item.color)}
-                        </span>
-                      )}
-                      {item.size && (
-                        <span className="text-gray-500 text-xs block">
-                          {t('size')}: {item.size}
-                        </span>
-                      )}
                     </div>
                   ))}
                 </div>
