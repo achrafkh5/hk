@@ -469,6 +469,7 @@ export default function ProductDetailPage() {
 
                   {/* Add to Cart and Order Now Buttons */}
                   <div className="space-y-2">
+                    {/*
                     <button
                       onClick={handleAddToCart}
                       className={`w-full py-3 text-sm font-medium transition-colors ${
@@ -479,7 +480,7 @@ export default function ProductDetailPage() {
                       suppressHydrationWarning
                     >
                       {added ? '✓ Added to Cart' : t('addToCart')}
-                    </button>
+                    </button> */}
                     <button
                       onClick={handleOrderNow}
                       className="w-full py-3 text-sm font-medium bg-white text-gray-900 border-2 border-gray-900 hover:bg-gray-50 transition-colors"
