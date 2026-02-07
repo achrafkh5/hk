@@ -11,63 +11,65 @@ import algerianWilayas from 'algeria-wilayas';
 
 const DELIVERY_PRICES = {
   Adrar: { domicile: 1400, stopdesk: 970 },
-  Chlef: { domicile: 800, stopdesk: 520 },
-  Laghouat: { domicile: 950, stopdesk: 670 },
-  "Oum El Bouaghi": { domicile: 700, stopdesk: 520 },
-  Béjaïa: { domicile: 750, stopdesk: 520 },
-  Biskra: { domicile: 800, stopdesk: 570 },
+  Chlef: { domicile: 850, stopdesk: 520 },
+  Laghouat: { domicile: 950, stopdesk: 620 },
+  "Oum El Bouaghi": { domicile: 850, stopdesk: 520 },
+  Batna: { domicile: 900, stopdesk: 520 },
+  Béjaïa: { domicile: 800, stopdesk: 520 },
+  Biskra: { domicile: 950, stopdesk: 620 },
   Béchar: { domicile: 1100, stopdesk: 720 },
-  Blida: { domicile: 750, stopdesk: 520 },
-  Bouira: { domicile: 750, stopdesk: 520 },
+  Blida: { domicile: 600, stopdesk: 470 },
+  Bouira: { domicile: 700, stopdesk: 520 },
   Tamanrasset: { domicile: 1600, stopdesk: 1120 },
-  Tébessa: { domicile: 800, stopdesk: 520 },
-  Tlemcen: { domicile: 950, stopdesk: 620 },
-  Tiaret: { domicile: 800, stopdesk: 520 },
-  "Tizi Ouzou": { domicile: 800, stopdesk: 520 },
-  Alger: { domicile: 600, stopdesk: 520 },
-  Djelfa: { domicile: 950, stopdesk: 670 },
-  Jijel: { domicile: 800, stopdesk: 520 },
-  Sétif: { domicile: 750, stopdesk: 520 },
-  Saïda: { domicile: 800, stopdesk: 570 },
-  Skikda: { domicile: 750, stopdesk: 520 },
-  "Sidi Bel Abbès": { domicile: 800, stopdesk: 520 },
-  Annaba: { domicile: 750, stopdesk: 520 },
-  Guelma: { domicile: 750, stopdesk: 520 },
-  Constantine: { domicile: 750, stopdesk: 520 },
+  Tébessa: { domicile: 900, stopdesk: 570 },
+  Tlemcen: { domicile: 900, stopdesk: 570 },
+  Tiaret: { domicile: 850, stopdesk: 520 },
+  "Tizi Ouzou": { domicile: 750, stopdesk: 520 },
+  Alger: { domicile: 500, stopdesk: 370 },
+  Djelfa: { domicile: 950, stopdesk: 570 },
+  Jijel: { domicile: 900, stopdesk: 520 },
+  Sétif: { domicile: 800, stopdesk: 520 },
+  Saïda: { domicile: 900, stopdesk: 570 },
+  Skikda: { domicile: 900, stopdesk: 520 },
+  "Sidi Bel Abbès": { domicile: 900, stopdesk: 520 },
+  Annaba: { domicile: 850, stopdesk: 520 },
+  Guelma: { domicile: 900, stopdesk: 520 },
+  Constantine: { domicile: 800, stopdesk: 520 },
   Médéa: { domicile: 800, stopdesk: 520 },
-  Mostaganem: { domicile: 800, stopdesk: 520 },
-  "M'Sila": { domicile: 800, stopdesk: 570 },
-  Mascara: { domicile: 800, stopdesk: 520 },
+  Mostaganem: { domicile: 900, stopdesk: 520 },
+  "M'Sila": { domicile: 850, stopdesk: 570 },
+  Mascara: { domicile: 900, stopdesk: 520 },
   Ouargla: { domicile: 950, stopdesk: 670 },
   Oran: { domicile: 800, stopdesk: 520 },
   "El Bayadh": { domicile: 1100, stopdesk: 670 },
   Illizi: { domicile: 0, stopdesk: 0 },
-  "Bordj Bou Arreridj": { domicile: 750, stopdesk: 520 },
-  Boumerdès: { domicile: 750, stopdesk: 520 },
-  "El Tarf": { domicile: 750, stopdesk: 520 },
+  "Bordj Bou Arreridj": { domicile: 800, stopdesk: 520 },
+  Boumerdès: { domicile: 700, stopdesk: 520 },
+  "El Tarf": { domicile: 850, stopdesk: 520 },
   Tindouf: { domicile: 0, stopdesk: 0 },
-  Tissemsilt: { domicile: 800, stopdesk: 520 },
+  Tissemsilt: { domicile: 900, stopdesk: 520 },
   "El Oued": { domicile: 950, stopdesk: 670 },
-  Khenchela: { domicile: 600, stopdesk: 520 },
-  "Souk Ahras": { domicile: 700, stopdesk: 520 },
-  Tipaza: { domicile: 800, stopdesk: 520 },
-  Mila: { domicile: 700, stopdesk: 520 },
-  "Aïn Defla": { domicile: 800, stopdesk: 520 },
+  Khenchela: { domicile: 900, stopdesk: 520 },
+  "Souk Ahras": { domicile: 900, stopdesk: 520 },
+  Tipaza: { domicile: 700, stopdesk: 520 },
+  Mila: { domicile: 900, stopdesk: 520 },
+  "Aïn Defla": { domicile: 900, stopdesk: 520 },
   Naâma: { domicile: 1100, stopdesk: 670 },
-  "Aïn Témouchent": { domicile: 800, stopdesk: 520 },
-  Ghardaïa: { domicile: 950, stopdesk: 670 },
-  Relizane: { domicile: 800, stopdesk: 520 },
-  Timimoun: { domicile: 1400, stopdesk: 970 },
+  "Aïn Témouchent": { domicile: 900, stopdesk: 520 },
+  Ghardaïa: { domicile: 950, stopdesk: 620 },
+  Relizane: { domicile: 900, stopdesk: 520 },
+  Timimoun: { domicile: 1400, stopdesk: 0 },
   "Bordj Badji Mokhtar": { domicile: 0, stopdesk: 0 },
-  "Ouled Djellal": { domicile: 950, stopdesk: 570 },
-  "Béni Abbès": { domicile: 1200, stopdesk: 970 },
-  "In Salah": { domicile: 1600, stopdesk: 1120 },
+  "Ouled Djellal": { domicile: 950, stopdesk: 620 },
+  "Béni Abbès": { domicile: 1100, stopdesk: 970 },
+  "In Salah": { domicile: 1600, stopdesk: 0 },
   "In Guezzam": { domicile: 1600, stopdesk: 0 },
   Touggourt: { domicile: 950, stopdesk: 670 },
   Djanet: { domicile: 0, stopdesk: 0 },
-  "El Meghaier": { domicile: 950, stopdesk: 0 },
+  "El M'Ghair": { domicile: 950, stopdesk: 0 },
   "El Menia": { domicile: 1000, stopdesk: 0 }
 };
+
 
 
 export default function CheckoutPage() {
@@ -79,13 +81,11 @@ export default function CheckoutPage() {
     name: '',
     phone: '',
     wilaya: '',
-    daira: '',
     commune: '',
     deliveryType: 'stopdesk',
   });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [dairas, setDairas] = useState([]);
   const [communes, setCommunes] = useState([]);
   const [deliveryPrice, setDeliveryPrice] = useState(0);
   const [availableDeliveryTypes, setAvailableDeliveryTypes] = useState({ domicile: true, stopdesk: true });
@@ -198,18 +198,17 @@ export default function CheckoutPage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setError('');
 
-    // When wilaya changes, load dairas and reset daira/commune
+    // When wilaya changes, load ALL communes from all dairas of that wilaya
     if (field === 'wilaya') {
       const wilayaDairas = algerianWilayas.getDairasByWilaya(value);
-      setDairas(wilayaDairas);
-      setCommunes([]);
-      setFormData(prev => ({ ...prev, daira: '', commune: '' }));
-    }
-
-    // When daira changes, load communes
-    if (field === 'daira') {
-      const dairaCommunes = algerianWilayas.getCommunesByDaira(value);
-      setCommunes(dairaCommunes);
+      const allCommunes = [];
+      wilayaDairas.forEach(daira => {
+        const dairaCommunes = algerianWilayas.getCommunesByDaira(daira.id);
+        allCommunes.push(...dairaCommunes);
+      });
+      // Sort communes alphabetically
+      allCommunes.sort((a, b) => (a.commune_name_ascii || '').localeCompare(b.commune_name_ascii || ''));
+      setCommunes(allCommunes);
       setFormData(prev => ({ ...prev, commune: '' }));
     }
   }
@@ -230,10 +229,6 @@ export default function CheckoutPage() {
       setError(t('wilayaRequired') || 'Wilaya is required');
       return;
     }
-    if (!formData.daira) {
-      setError(t('dairaRequired') || 'Daira is required');
-      return;
-    }
     if (!formData.commune) {
       setError(t('communeRequired') || 'Commune is required');
       return;
@@ -252,7 +247,6 @@ export default function CheckoutPage() {
 
     const languageKey = lang === 'ar' ? 'arabic' : 'ascii';
     const wilayaName = algerianWilayas.getWilayaName(formData.wilaya, languageKey);
-    const selectedDaira = dairas.find(d => d.id === formData.daira);
     
     // Try to find commune by matching both string and number versions of ID
     const selectedCommune = communes.find(c => 
@@ -270,25 +264,16 @@ export default function CheckoutPage() {
         communeName = selectedCommune.commune_name_ascii || selectedCommune.commune_name || String(formData.commune);
       }
     }
-    
-    console.log('Commune ID from form:', formData.commune, 'Type:', typeof formData.commune);
-    console.log('Available communes:', communes.map(c => ({ id: c.id, type: typeof c.id })));
-    console.log('Selected Commune:', selectedCommune);
-    console.log('Commune Name:', communeName);
-    console.log('Cart items:', JSON.stringify(cart, null, 2));
 
     const orderPayload = {
-      items: cart.map((item) => {
-        console.log('Item in cart:', item);
-        return {
+      items: cart.map((item) => ({
           productId: item.productId,
           name: item.name,
           price: item.price,
           qty: item.qty,
           color: item.color || null,
           size: item.size || null,
-        };
-      }),
+        })),
       subtotal: getCartTotal(),
       deliveryPrice: deliveryPrice,
       deliveryType: formData.deliveryType,
@@ -297,7 +282,6 @@ export default function CheckoutPage() {
         name: formData.name.trim(),
         phone: formData.phone.trim(),
         wilaya: wilayaName || formData.wilaya,
-        daira: selectedDaira?.name?.[languageKey] || formData.daira,
         commune: communeName,
       },
     };
@@ -420,34 +404,6 @@ export default function CheckoutPage() {
 
                 <div>
                   <label
-                    htmlFor="daira"
-                    className="block text-sm text-gray-700 mb-1"
-                    suppressHydrationWarning
-                  >
-                    {t('daira')} *
-                  </label>
-                  <select
-                    id="daira"
-                    value={formData.daira}
-                    onChange={(e) => handleInputChange('daira', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:border-gray-500 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
-                    required
-                    disabled={!formData.wilaya}
-                  >
-                    <option value="">{t('selectDaira')}</option>
-                    {dairas.map((daira) => {
-                      const languageKey = lang === 'ar' ? 'arabic' : 'ascii';
-                      return (
-                        <option key={daira.id} value={daira.id}>
-                          {daira.name[languageKey]}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-
-                <div>
-                  <label
                     htmlFor="commune"
                     className="block text-sm text-gray-700 mb-1"
                     suppressHydrationWarning
@@ -460,7 +416,7 @@ export default function CheckoutPage() {
                     onChange={(e) => handleInputChange('commune', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:border-gray-500 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
                     required
-                    disabled={!formData.daira}
+                    disabled={!formData.wilaya}
                   >
                     <option value="">{t('selectCommune')}</option>
                     {communes.map((commune) => {
