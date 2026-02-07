@@ -90,6 +90,23 @@ export default function CheckoutPage() {
   const [deliveryPrice, setDeliveryPrice] = useState(0);
   const [availableDeliveryTypes, setAvailableDeliveryTypes] = useState({ domicile: true, stopdesk: true });
   const [isDeliveryAvailable, setIsDeliveryAvailable] = useState(true);
+  const [colors, setColors] = useState([]);
+
+  // Fetch colors on mount
+  useEffect(() => {
+    async function fetchColors() {
+      try {
+        const res = await fetch('/api/colors');
+        if (res.ok) {
+          const data = await res.json();
+          setColors(data);
+        }
+      } catch (err) {
+        console.error('Error fetching colors:', err);
+      }
+    }
+    fetchColors();
+  }, []);
 
   // Redirect to cart if empty
   useEffect(() => {
@@ -153,11 +170,22 @@ export default function CheckoutPage() {
     return item.name || 'Unnamed';
   }
 
+  // Get text based on current language
+  function getText(field) {
+    return field?.[lang] || field?.en || '';
+  }
+
+  // Get color object by ID
+  function getColorById(colorId) {
+    return colors.find(c => c._id === colorId);
+  }
+
   // Get translated color name
-  function getColorName(colorName) {
-    if (!colorName) return '';
-    const colorKey = `color${colorName}`;
-    return t(colorKey) || colorName;
+  function getColorName(colorId) {
+    if (!colorId) return '';
+    const color = getColorById(colorId);
+    if (!color) return colorId;
+    return getText(color.name);
   }
 
   // Format price

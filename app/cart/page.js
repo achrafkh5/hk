@@ -13,6 +13,23 @@ export default function CartPage() {
   const { cart, updateQuantity, removeFromCart, getCartTotal } = useCart();
   const isClient = typeof window !== 'undefined';
   const [productStocks, setProductStocks] = useState({});
+  const [colors, setColors] = useState([]);
+
+  // Fetch colors on mount
+  useEffect(() => {
+    async function fetchColors() {
+      try {
+        const res = await fetch('/api/colors');
+        if (res.ok) {
+          const data = await res.json();
+          setColors(data);
+        }
+      } catch (err) {
+        console.error('Error fetching colors:', err);
+      }
+    }
+    fetchColors();
+  }, []);
 
   // Fetch product stocks for all cart items
   useEffect(() => {
@@ -58,11 +75,22 @@ export default function CartPage() {
     return item.name || 'Unnamed';
   }
 
+  // Get text based on current language
+  function getText(field) {
+    return field?.[lang] || field?.en || '';
+  }
+
+  // Get color object by ID
+  function getColorById(colorId) {
+    return colors.find(c => c._id === colorId);
+  }
+
   // Get translated color name
-  function getColorName(colorName) {
-    if (!colorName) return '';
-    const colorKey = `color${colorName}`;
-    return t(colorKey) || colorName;
+  function getColorName(colorId) {
+    if (!colorId) return '';
+    const color = getColorById(colorId);
+    if (!color) return colorId;
+    return getText(color.name);
   }
 
   // Format price
@@ -181,7 +209,7 @@ export default function CartPage() {
                       {/* Size Display */}
                       {item.size && (
                         <p className="text-gray-500 text-sm mt-1">
-                          {t('size') || 'Size'}: {item.size}
+                          {t('size')}: {item.size}
                         </p>
                       )}
 
@@ -213,8 +241,8 @@ export default function CartPage() {
                           {getAvailableStock(item) > 0 && (
                             <p className="text-xs text-gray-500">
                               {item.qty >= getAvailableStock(item) 
-                                ? (t('maxStock') || 'Max stock reached')
-                                : `${getAvailableStock(item)} ${t('available') || 'available'}`
+                                ? t('maxStock')
+                                : `${getAvailableStock(item)} ${t('available')}`
                               }
                             </p>
                           )}

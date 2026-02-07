@@ -144,7 +144,7 @@ export default function ProductDetailPage() {
 
     // If product has sizes, require size selection
     if (product.hasSize && product.sizes && product.sizes.length > 0 && !selectedSize) {
-      alert(t('selectSize') || 'Please select a size');
+      alert(t('selectSize'));
       return;
     }
 
@@ -375,7 +375,7 @@ export default function ProductDetailPage() {
                   {product.hasSize && product.sizes && product.sizes.length > 0 && (
                     <div>
                       <label className="text-sm font-medium text-gray-700 mb-2 block">
-                        {t('selectSize') || 'Select Size'}:
+                        {t('selectSize')}:
                       </label>
                       <div className="flex flex-wrap gap-2">
                         {product.sizes.map((sizeObj, index) => {
@@ -397,7 +397,7 @@ export default function ProductDetailPage() {
                             >
                               <span className="text-sm font-medium">{sizeObj.name}</span>
                               {!isAvailable && (
-                                <span className="block text-xs mt-0.5">Out</span>
+                                <span className="block text-xs mt-0.5">{t('outOfStock')}</span>
                               )}
                             </button>
                           );
