@@ -366,6 +366,7 @@ export default function OrdersPage() {
             <TableRow>
               <TableCell>Order ID</TableCell>
               <TableCell>Customer</TableCell>
+              <TableCell>Delivery Type</TableCell>
               <TableCell>Total</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Date</TableCell>
@@ -375,13 +376,13 @@ export default function OrdersPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                   <CircularProgress size={24} />
                 </TableCell>
               </TableRow>
             ) : orders.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                   <Typography color="text.secondary">
                     No orders found
                   </Typography>
@@ -405,6 +406,14 @@ export default function OrdersPage() {
                     <Typography variant="caption" color="text.secondary">
                       {order.customer?.email || ''}
                     </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={order.deliveryType === 'domicile' ? 'Domicile' : 'Stop Desk'}
+                      size="small"
+                      variant="outlined"
+                      color={order.deliveryType === 'domicile' ? 'primary' : 'default'}
+                    />
                   </TableCell>
                   <TableCell>{formatPrice(order.total || 0)}</TableCell>
                   <TableCell>
@@ -537,46 +546,56 @@ export default function OrdersPage() {
               <Divider />
 
               {/* Delivery Info */}
-              {editMode && (
-                <>
-                  <Box>
-                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                      Delivery
-                    </Typography>
-                    <Stack direction="row" spacing={2}>
-                      <FormControl size="small" fullWidth>
-                        <InputLabel>Delivery Type</InputLabel>
-                        <Select
-                          value={editedOrder.deliveryType}
-                          label="Delivery Type"
-                          onChange={(e) => setEditedOrder({
-                            ...editedOrder,
-                            deliveryType: e.target.value
-                          })}
-                        >
-                          <MenuItem value="domicile">Domicile</MenuItem>
-                          <MenuItem value="stopdesk">Stop Desk</MenuItem>
-                        </Select>
-                      </FormControl>
-                      <TextField
-                        label="Delivery Price"
-                        type="number"
-                        value={editedOrder.deliveryPrice}
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  Delivery
+                </Typography>
+                {editMode ? (
+                  <Stack direction="row" spacing={2}>
+                    <FormControl size="small" fullWidth>
+                      <InputLabel>Delivery Type</InputLabel>
+                      <Select
+                        value={editedOrder.deliveryType}
+                        label="Delivery Type"
                         onChange={(e) => setEditedOrder({
                           ...editedOrder,
-                          deliveryPrice: parseFloat(e.target.value) || 0
+                          deliveryType: e.target.value
                         })}
-                        fullWidth
-                        size="small"
-                        InputProps={{
-                          endAdornment: 'DA'
-                        }}
-                      />
-                    </Stack>
-                  </Box>
-                  <Divider />
-                </>
-              )}
+                      >
+                        <MenuItem value="domicile">Domicile</MenuItem>
+                        <MenuItem value="stopdesk">Stop Desk</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <TextField
+                      label="Delivery Price"
+                      type="number"
+                      value={editedOrder.deliveryPrice}
+                      onChange={(e) => setEditedOrder({
+                        ...editedOrder,
+                        deliveryPrice: parseFloat(e.target.value) || 0
+                      })}
+                      fullWidth
+                      size="small"
+                      InputProps={{
+                        endAdornment: 'DA'
+                      }}
+                    />
+                  </Stack>
+                ) : (
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Chip
+                      label={selectedOrder.deliveryType === 'domicile' ? 'Domicile' : 'Stop Desk'}
+                      size="small"
+                      color={selectedOrder.deliveryType === 'domicile' ? 'primary' : 'default'}
+                    />
+                    <Typography variant="body2">
+                      {formatPrice(selectedOrder.deliveryPrice || 0)}
+                    </Typography>
+                  </Stack>
+                )}
+              </Box>
+
+              <Divider />
 
               {/* Order Items */}
               <Box>
