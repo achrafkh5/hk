@@ -493,13 +493,6 @@ export default function OrdersPage() {
                       size="small"
                     />
                     <TextField
-                      label="Daira"
-                      value={editedOrder.customer?.daira || ''}
-                      onChange={(e) => handleCustomerChange('daira', e.target.value)}
-                      fullWidth
-                      size="small"
-                    />
-                    <TextField
                       label="Commune"
                       value={editedOrder.customer?.commune || ''}
                       onChange={(e) => handleCustomerChange('commune', e.target.value)}
@@ -519,7 +512,6 @@ export default function OrdersPage() {
                       {selectedOrder.customer?.wilaya && (
                         <>
                           {selectedOrder.customer.wilaya}
-                          {selectedOrder.customer?.daira && `, ${selectedOrder.customer.daira}`}
                           {selectedOrder.customer?.commune && `, ${selectedOrder.customer.commune}`}
                         </>
                       )}

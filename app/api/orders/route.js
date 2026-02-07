@@ -67,9 +67,9 @@ export async function POST(request) {
       );
     }
 
-    if (!customer?.wilaya || !customer?.daira || !customer?.commune) {
+    if (!customer?.wilaya || !customer?.commune) {
       return NextResponse.json(
-        { error: 'Customer location (wilaya, daira, commune) is required' },
+        { error: 'Customer location (wilaya, commune) is required' },
         { status: 400 }
       );
     }
@@ -93,7 +93,6 @@ export async function POST(request) {
         name: customer.name,
         phone: customer.phone,
         wilaya: customer.wilaya,
-        daira: customer.daira,
         commune: customer.commune,
       },
       status: 'pending',
