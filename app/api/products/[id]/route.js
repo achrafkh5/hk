@@ -130,6 +130,52 @@ export async function DELETE(request, { params }) {
     }
 
     const db = await getDb();
+    
+    // First, get the product to retrieve its images
+    const product = await db.collection('products').findOne({
+      _id: new ObjectId(id),
+    });
+
+    if (!product) {
+      return NextResponse.json(
+        { error: 'Product not found' },
+        { status: 404 }
+      );
+    }
+
+    // Delete all product images from Cloudinary
+    if (product.images && product.images.length > 0) {
+      for (const image of product.images) {
+        try {
+          // Handle both old format (string) and new format (object with url)
+          const imageUrl = typeof image === 'string' ? image : image.url;
+          
+          if (imageUrl) {
+            // Extract public_id from Cloudinary URL
+            const urlParts = imageUrl.split('/');
+            const filename = urlParts[urlParts.length - 1];
+            const publicIdWithExt = urlParts.slice(-2).join('/'); // folder/filename
+            const publicId = publicIdWithExt.replace(/\.[^/.]+$/, ''); // remove extension
+
+            // Call delete endpoint
+            await fetch(`${request.nextUrl.origin}/api/upload/delete`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                url: imageUrl,
+                publicId: publicId,
+                resourceType: 'image'
+              }),
+            });
+          }
+        } catch (err) {
+          console.error('Error deleting image:', err);
+          // Continue even if image deletion fails
+        }
+      }
+    }
+
+    // Delete the product from database
     const result = await db.collection('products').deleteOne({
       _id: new ObjectId(id),
     });

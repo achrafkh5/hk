@@ -8,6 +8,7 @@ import { useLanguage } from '@/lib/LanguageContext';
 import { useCart } from '@/lib/CartContext';
 import Header from '@/components/client/Header';
 import Footer from '@/components/client/Footer';
+import WhatsAppButton from '@/components/client/WhatsAppButton';
 import algerianWilayas from 'algeria-wilayas';
 
 const DELIVERY_PRICES = {
@@ -720,6 +721,7 @@ export default function CheckoutPage() {
       </main>
 
       <Footer />
+      <WhatsAppButton />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useLanguage } from '@/lib/LanguageContext';
 import Header from '@/components/client/Header';
 import Footer from '@/components/client/Footer';
+import WhatsAppButton from '@/components/client/WhatsAppButton';
 
 function OrderConfirmationContent() {
   const searchParams = useSearchParams();
@@ -93,6 +94,7 @@ export default function OrderConfirmationPage() {
       </main>
 
       <Footer />
+      <WhatsAppButton />
     </div>
   );
 }

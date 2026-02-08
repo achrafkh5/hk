@@ -3,6 +3,7 @@ import Hero from '@/components/client/Hero';
 import Categories from '@/components/client/Categories';
 import FeaturedProducts from '@/components/client/FeaturedProducts';
 import Footer from '@/components/client/Footer';
+import WhatsAppButton from '@/components/client/WhatsAppButton';
 
 export default function HomePage() {
   return (
@@ -14,6 +15,7 @@ export default function HomePage() {
         <FeaturedProducts />
       </main>
       <Footer />
+      <WhatsAppButton />
     </div>
   );
 }

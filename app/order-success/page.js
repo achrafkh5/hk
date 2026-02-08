@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useLanguage } from '@/lib/LanguageContext';
 import Header from '@/components/client/Header';
 import Footer from '@/components/client/Footer';
+import WhatsAppButton from '@/components/client/WhatsAppButton';
 
 export default function OrderSuccessPage() {
   const { t } = useLanguage();
@@ -53,6 +54,7 @@ export default function OrderSuccessPage() {
       </main>
 
       <Footer />
+      <WhatsAppButton />
     </div>
   );
 }

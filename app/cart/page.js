@@ -7,6 +7,7 @@ import { useLanguage } from '@/lib/LanguageContext';
 import { useCart } from '@/lib/CartContext';
 import Header from '@/components/client/Header';
 import Footer from '@/components/client/Footer';
+import WhatsAppButton from '@/components/client/WhatsAppButton';
 
 export default function CartPage() {
   const { lang, t } = useLanguage();
@@ -315,6 +316,7 @@ export default function CartPage() {
       </main>
 
       <Footer />
+      <WhatsAppButton />
     </div>
   );
 }
