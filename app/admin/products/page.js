@@ -58,6 +58,8 @@ export default function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [imageColorDialogOpen, setImageColorDialogOpen] = useState(false);
+  const [pendingImageUrl, setPendingImageUrl] = useState('');
 
   // Filters
   const [filterCategory, setFilterCategory] = useState('');
@@ -247,13 +249,9 @@ export default function ProductsPage() {
       const data = await res.json();
 
       if (res.ok && data.url) {
-        setFormData(prev => {
-          const currentImages = prev.images || [];
-          const newImages = [...currentImages, data.url];
-          console.log('Before upload - Current images:', currentImages);
-          console.log('After upload - New images:', newImages);
-          return { ...prev, images: newImages };
-        });
+        // Open dialog to optionally link color
+        setPendingImageUrl(data.url);
+        setImageColorDialogOpen(true);
       } else {
         setError(data.error || 'Failed to upload image');
       }
@@ -263,6 +261,20 @@ export default function ProductsPage() {
     } finally {
       setUploading(false);
     }
+  }
+
+  function handleSaveImageWithColor(colorId = null) {
+    if (!pendingImageUrl) return;
+    
+    setFormData(prev => {
+      const currentImages = prev.images || [];
+      const newImage = colorId ? { url: pendingImageUrl, colorId } : { url: pendingImageUrl };
+      const newImages = [...currentImages, newImage];
+      return { ...prev, images: newImages };
+    });
+    
+    setPendingImageUrl('');
+    setImageColorDialogOpen(false);
   }
 
   function handleRemoveImage(index) {
@@ -549,7 +561,7 @@ export default function ProductsPage() {
                     {product.images?.[0] ? (
                       <Box
                         component="img"
-                        src={product.images[0]}
+                        src={typeof product.images[0] === 'string' ? product.images[0] : product.images[0].url}
                         alt={product.name?.en || 'Product'}
                         sx={{
                           width: 50,
@@ -875,64 +887,83 @@ export default function ProductsPage() {
               
               {formData.images?.length > 0 && (
                 <Stack spacing={1.5}>
-                  {formData.images.map((url, index) => (
-                    <Paper
-                      key={index}
-                      variant="outlined"
-                      sx={{
-                        p: 1.5,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 2,
-                        bgcolor: index === 0 ? 'primary.50' : 'transparent',
-                      }}
-                    >
-                      <Box
-                        component="img"
-                        src={url}
-                        alt={`Product ${index + 1}`}
+                  {formData.images.map((item, index) => {
+                    const url = typeof item === 'string' ? item : item.url;
+                    const colorId = typeof item === 'object' ? item.colorId : null;
+                    const linkedColor = colorId ? colors.find(c => c._id === colorId) : null;
+                    
+                    return (
+                      <Paper
+                        key={index}
+                        variant="outlined"
                         sx={{
-                          width: 60,
-                          height: 60,
-                          objectFit: 'cover',
-                          border: '1px solid',
-                          borderColor: 'divider',
-                          borderRadius: 1,
+                          p: 1.5,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 2,
+                          bgcolor: index === 0 ? 'primary.50' : 'transparent',
                         }}
-                      />
-                      <Stack direction="row" spacing={0.5} flex={1}>
-                        {index === 0 && (
-                          <Chip label="Cover" size="small" color="primary" />
-                        )}
-                        <Typography variant="caption" color="text.secondary" sx={{ flex: 1, alignSelf: 'center' }}>
-                          Image {index + 1}
-                        </Typography>
-                      </Stack>
-                      <Stack direction="row" spacing={0.5}>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleMoveImage(index, 'up')}
-                          disabled={index === 0}
-                        >
-                          ▲
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleMoveImage(index, 'down')}
-                          disabled={index === formData.images.length - 1}
-                        >
-                          ▼
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => handleRemoveImage(index)}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Stack>
-                    </Paper>
-                  ))}
+                      >
+                        <Box
+                          component="img"
+                          src={url}
+                          alt={`Product ${index + 1}`}
+                          sx={{
+                            width: 60,
+                            height: 60,
+                            objectFit: 'cover',
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderRadius: 1,
+                          }}
+                        />
+                        <Stack spacing={0.5} flex={1}>
+                          <Stack direction="row" spacing={0.5} alignItems="center">
+                            {index === 0 && (
+                              <Chip label="Cover" size="small" color="primary" />
+                            )}
+                            {linkedColor && (
+                              <Chip 
+                                label={linkedColor.name?.en || 'Color'}
+                                size="small"
+                                sx={{
+                                  bgcolor: linkedColor.hex,
+                                  color: linkedColor.hex === '#FFFFFF' || linkedColor.hex.toLowerCase() === '#fff' ? '#000' : '#fff',
+                                  border: linkedColor.hex === '#FFFFFF' || linkedColor.hex.toLowerCase() === '#fff' ? '1px solid #ddd' : 'none',
+                                }}
+                              />
+                            )}
+                          </Stack>
+                          <Typography variant="caption" color="text.secondary">
+                            Image {index + 1}
+                          </Typography>
+                        </Stack>
+                        <Stack direction="row" spacing={0.5}>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleMoveImage(index, 'up')}
+                            disabled={index === 0}
+                          >
+                            ▲
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleMoveImage(index, 'down')}
+                            disabled={index === formData.images.length - 1}
+                          >
+                            ▼
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleRemoveImage(index)}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Stack>
+                      </Paper>
+                    );
+                  })}
                 </Stack>
               )}
             </Box>
@@ -1135,6 +1166,87 @@ export default function ProductsPage() {
             disabled={saving || !colorForm.nameEn.trim() || !colorForm.hex.trim()}
           >
             {saving ? 'Adding...' : 'Add Color'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Link Image to Color Dialog */}
+      <Dialog
+        open={imageColorDialogOpen}
+        onClose={() => {
+          setImageColorDialogOpen(false);
+          setPendingImageUrl('');
+        }}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Link Image to Color (Optional)</DialogTitle>
+        <DialogContent>
+          <Stack spacing={3} sx={{ mt: 1 }}>
+            <Typography variant="body2" color="text.secondary">
+              You can optionally link this image to a specific color. When customers select that color, this image will be displayed.
+            </Typography>
+
+            {pendingImageUrl && (
+              <Box
+                component="img"
+                src={pendingImageUrl}
+                alt="Preview"
+                sx={{
+                  width: '100%',
+                  maxHeight: 200,
+                  objectFit: 'contain',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                }}
+              />
+            )}
+
+            <Typography variant="subtitle2">
+              Select a color to link (or skip to add without color):
+            </Typography>
+
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {colors.map((color) => (
+                <Box
+                  key={color._id}
+                  onClick={() => handleSaveImageWithColor(color._id)}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    px: 2,
+                    py: 1,
+                    border: '2px solid',
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    cursor: 'pointer',
+                    '&:hover': {
+                      borderColor: 'primary.main',
+                      bgcolor: 'primary.50',
+                    },
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: '50%',
+                      bgcolor: color.hex,
+                      border: '1px solid',
+                      borderColor: color.hex === '#FFFFFF' ? 'grey.300' : 'transparent',
+                    }}
+                  />
+                  <Typography variant="body2">{color.name?.en || 'Unnamed'}</Typography>
+                </Box>
+              ))}
+            </Box>
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => handleSaveImageWithColor(null)}>
+            Skip - Add Without Color
           </Button>
         </DialogActions>
       </Dialog>

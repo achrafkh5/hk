@@ -153,7 +153,7 @@ function ShopContent() {
               <div className="aspect-square bg-gray-100 mb-3 relative overflow-hidden">
                 {product.images?.[0] ? (
                   <Image
-                    src={product.images[0]}
+                    src={typeof product.images[0] === 'string' ? product.images[0] : product.images[0].url}
                     alt={getProductName(product)}
                     fill
                     className="object-cover"

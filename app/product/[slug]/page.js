@@ -95,6 +95,35 @@ export default function ProductDetailPage() {
     return color?.hex || '#000000';
   }
 
+  // Get images for display based on selected color
+  function getDisplayImages() {
+    if (!product?.images || product.images.length === 0) return [];
+    
+    // Convert old format (string URLs) to new format (objects)
+    const normalizedImages = product.images.map(img => 
+      typeof img === 'string' ? { url: img } : img
+    );
+
+    // If a color is selected, prioritize color-specific images first, then show all others
+    if (selectedColor) {
+      const colorImages = normalizedImages.filter(img => img.colorId === selectedColor);
+      const otherImages = normalizedImages.filter(img => img.colorId !== selectedColor);
+      
+      // Show color-specific images first, followed by all other images
+      return [...colorImages, ...otherImages].map(img => img.url);
+    }
+
+    // Return all images
+    return normalizedImages.map(img => img.url);
+  }
+
+  // Handle color selection
+  function handleColorSelect(colorId) {
+    setSelectedColor(colorId);
+    // Reset to first image when color changes
+    setSelectedImageIndex(0);
+  }
+
   // Format price
   function formatPrice(price) {
     const currency = t('currency');
@@ -149,7 +178,14 @@ export default function ProductDetailPage() {
       return;
     }
 
-    addToCart(product, quantity, selectedColor, selectedSize);
+    // Create a modified product with the correct color-specific image
+    const displayImages = getDisplayImages();
+    const productWithImage = {
+      ...product,
+      images: displayImages
+    };
+
+    addToCart(productWithImage, quantity, selectedColor, selectedSize);
     setAdded(true);
 
     // Reset "added" state after 2 seconds
@@ -177,11 +213,12 @@ export default function ProductDetailPage() {
     }
 
     // Store product details in sessionStorage for checkout
+    const displayImages = getDisplayImages();
     const orderItem = {
       productId: product._id,
       name: product.name,
       price: product.price,
-      image: product.images?.[0] || '',
+      image: displayImages[0] || '',
       qty: quantity,
       color: selectedColor || null,
       size: selectedSize || null,
@@ -259,9 +296,9 @@ export default function ProductDetailPage() {
             <div>
               {/* Main Image */}
               <div className="aspect-square bg-gray-100 relative overflow-hidden mb-4">
-                {product.images?.length > 0 ? (
+                {getDisplayImages().length > 0 ? (
                   <Image
-                    src={product.images[selectedImageIndex]}
+                    src={getDisplayImages()[Math.min(selectedImageIndex, getDisplayImages().length - 1)]}
                     alt={getText(product.name)}
                     fill
                     className="object-cover"
@@ -276,9 +313,9 @@ export default function ProductDetailPage() {
               </div>
               
               {/* Thumbnail Images */}
-              {product.images?.length > 1 && (
+              {getDisplayImages().length > 1 && (
                 <div className="grid grid-cols-4 gap-2">
-                  {product.images.map((img, index) => (
+                  {getDisplayImages().map((img, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImageIndex(index)}
@@ -386,7 +423,7 @@ export default function ProductDetailPage() {
                           return (
                             <button
                               key={index}
-                              onClick={() => setSelectedColor(colorId)}
+                              onClick={() => handleColorSelect(colorId)}
                               className={`flex items-center gap-2 px-3 py-2 border-2 rounded transition-all ${
                                 isSelected
                                   ? 'border-gray-900 bg-gray-50'
