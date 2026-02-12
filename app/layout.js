@@ -4,7 +4,7 @@ import { LanguageProvider } from "@/lib/LanguageContext";
 import { CartProvider } from "@/lib/CartContext";
 import AuthProvider from "@/lib/AuthProvider";
 import FloatingCartButton from "@/components/client/FloatingCartButton";
-
+import MetaPixel from "@/components/MetaPixel";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -31,6 +31,7 @@ export default function RootLayout({ children }) {
             <CartProvider>
               {children}
               <FloatingCartButton />
+              <MetaPixel />
             </CartProvider>
           </LanguageProvider>
         </AuthProvider>
