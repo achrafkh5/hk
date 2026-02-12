@@ -27,9 +27,17 @@ import {
   TextField,
   IconButton,
   Alert,
+  Switch,
+  FormControlLabel,
+  Tooltip,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import { useOrderNotifications } from '@/hooks/useOrderNotifications';
+import { playNotificationSound } from '@/lib/orderNotifications';
 
 const ORDER_STATUSES = [
   { value: 'pending', label: 'Pending' },
@@ -99,6 +107,43 @@ export default function OrdersPage() {
 
   // Filter
   const [filterStatus, setFilterStatus] = useState('');
+
+  // Notifications
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
+    // Load preference from localStorage
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('orderNotificationsEnabled');
+      return saved === null ? true : saved === 'true'; // Default to enabled
+    }
+    return true;
+  });
+
+  // Use order notifications hook
+  const { hasPermission, requestPermission } = useOrderNotifications(
+    notificationsEnabled,
+    30000 // Check every 30 seconds
+  );
+
+  // Handle notification toggle
+  function handleNotificationToggle(event) {
+    const enabled = event.target.checked;
+    setNotificationsEnabled(enabled);
+    
+    // Save preference
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('orderNotificationsEnabled', enabled.toString());
+    }
+
+    // Request permission if enabling
+    if (enabled && !hasPermission) {
+      requestPermission();
+    }
+  }
+
+  // Test notification sound
+  function handleTestSound() {
+    playNotificationSound();
+  }
 
   // Fetch colors on mount
   useEffect(() => {
@@ -336,9 +381,66 @@ export default function OrdersPage() {
   return (
     <Box>
       {/* Page Header */}
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
         <Typography variant="h5">Orders</Typography>
+        
+        {/* Notification Controls */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {/* Test Sound Button */}
+          <Tooltip title="Test notification sound">
+            <IconButton 
+              onClick={handleTestSound}
+              size="small"
+              color="primary"
+            >
+              <VolumeUpIcon />
+            </IconButton>
+          </Tooltip>
+          
+          {/* Notification Toggle */}
+          <Tooltip title={hasPermission ? 'Notifications enabled' : 'Click to enable notifications'}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={notificationsEnabled}
+                  onChange={handleNotificationToggle}
+                  color="primary"
+                />
+              }
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  {notificationsEnabled && hasPermission ? (
+                    <NotificationsActiveIcon fontSize="small" color="primary" />
+                  ) : (
+                    <NotificationsOffIcon fontSize="small" color="disabled" />
+                  )}
+                  <Typography variant="body2">
+                    Order Alerts
+                  </Typography>
+                </Box>
+              }
+            />
+          </Tooltip>
+        </Box>
       </Box>
+
+      {/* Permission Warning */}
+      {notificationsEnabled && !hasPermission && (
+        <Alert severity="warning" sx={{ mb: 2 }} action={
+          <Button color="inherit" size="small" onClick={requestPermission}>
+            Allow
+          </Button>
+        }>
+          Please allow notifications in your browser to receive new order alerts with sound.
+        </Alert>
+      )}
+
+      {/* Active Notifications Info */}
+      {notificationsEnabled && hasPermission && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          🔔 You&apos;ll receive a notification with sound when new orders arrive (checking every 30 seconds)
+        </Alert>
+      )}
 
       {/* Filter */}
       <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
