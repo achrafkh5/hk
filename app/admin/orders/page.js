@@ -36,8 +36,9 @@ import EditIcon from '@mui/icons-material/Edit';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import BugReportIcon from '@mui/icons-material/BugReport';
 import { useOrderNotifications } from '@/hooks/useOrderNotifications';
-import { playNotificationSound } from '@/lib/orderNotifications';
+import { playNotificationSound, notifyNewOrder } from '@/lib/orderNotifications';
 
 const ORDER_STATUSES = [
   { value: 'pending', label: 'Pending' },
@@ -119,7 +120,7 @@ export default function OrdersPage() {
   });
 
   // Use order notifications hook
-  const { hasPermission, requestPermission } = useOrderNotifications(
+  const { hasPermission, requestPermission, error: notificationError } = useOrderNotifications(
     notificationsEnabled,
     30000 // Check every 30 seconds
   );
@@ -143,6 +144,19 @@ export default function OrdersPage() {
   // Test notification sound
   function handleTestSound() {
     playNotificationSound();
+  }
+
+  // Test full notification (sound + popup)
+  function handleTestNotification() {
+    const testOrder = {
+      _id: 'test-' + Date.now(),
+      customer: { name: 'Test Customer' },
+      total: 1500.00,
+      items: [{ productId: 'test', name: 'Test Product', qty: 1, price: 1500 }],
+    };
+    
+    console.log('🧪 Testing full notification with test order');
+    notifyNewOrder(testOrder);
   }
 
   // Fetch colors on mount
@@ -385,7 +399,7 @@ export default function OrdersPage() {
         <Typography variant="h5">Orders</Typography>
         
         {/* Notification Controls */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
           {/* Test Sound Button */}
           <Tooltip title="Test notification sound">
             <IconButton 
@@ -394,6 +408,17 @@ export default function OrdersPage() {
               color="primary"
             >
               <VolumeUpIcon />
+            </IconButton>
+          </Tooltip>
+          
+          {/* Test Full Notification Button */}
+          <Tooltip title="Test sound + popup notification">
+            <IconButton 
+              onClick={handleTestNotification}
+              size="small"
+              color="secondary"
+            >
+              <BugReportIcon />
             </IconButton>
           </Tooltip>
           
@@ -435,8 +460,15 @@ export default function OrdersPage() {
         </Alert>
       )}
 
+      {/* Notification Error */}
+      {notificationsEnabled && notificationError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {notificationError}
+        </Alert>
+      )}
+
       {/* Active Notifications Info */}
-      {notificationsEnabled && hasPermission && (
+      {notificationsEnabled && hasPermission && !notificationError && (
         <Alert severity="info" sx={{ mb: 2 }}>
           🔔 You&apos;ll receive a notification with sound when new orders arrive (checking every 30 seconds)
         </Alert>
