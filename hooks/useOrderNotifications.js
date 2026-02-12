@@ -95,7 +95,12 @@ export function useOrderNotifications(enabled = true, pollInterval = 30000) {
             });
             
             // Trigger notification
-            notifyNewOrder(latestOrder);
+            const result = notifyNewOrder(latestOrder);
+            console.log('📊 Notification result:', result);
+            
+            if (!result.notification) {
+              console.error('⚠️ Notification did not appear. Error:', result.error);
+            }
             
             // Update tracking
             setLastOrderCount(orders.length);

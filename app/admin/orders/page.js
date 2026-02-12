@@ -38,8 +38,9 @@ import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import BugReportIcon from '@mui/icons-material/BugReport';
 import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useOrderNotifications } from '@/hooks/useOrderNotifications';
-import { playNotificationSound, notifyNewOrder } from '@/lib/orderNotifications';
+import { playNotificationSound, notifyNewOrder, getNotificationPermission } from '@/lib/orderNotifications';
 import { checkNotificationSupport } from '@/lib/deviceDetection';
 
 const ORDER_STATUSES = [
@@ -123,10 +124,21 @@ export default function OrdersPage() {
 
   // Check device support
   const [deviceSupport, setDeviceSupport] = useState(null);
+  const [showDebug, setShowDebug] = useState(false);
+  const [debugInfo, setDebugInfo] = useState({});
   
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setDeviceSupport(checkNotificationSupport());
+      
+      // Update debug info
+      setDebugInfo({
+        userAgent: navigator.userAgent,
+        notificationAPI: 'Notification' in window,
+        permission: getNotificationPermission(),
+        platform: navigator.platform,
+        language: navigator.language,
+      });
     }
   }, []);
 
@@ -135,6 +147,17 @@ export default function OrdersPage() {
     notificationsEnabled,
     30000 // Check every 30 seconds
   );
+  
+  // Update debug info when permission changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && hasPermission !== undefined) {
+      setDebugInfo(prev => ({
+        ...prev,
+        permission: getNotificationPermission(),
+        hasPermission,
+      }));
+    }
+  }, [hasPermission]);
 
   // Handle notification toggle
   function handleNotificationToggle(event) {
@@ -167,7 +190,20 @@ export default function OrdersPage() {
     };
     
     console.log('🧪 Testing full notification with test order');
-    notifyNewOrder(testOrder);
+    console.log('🔍 Permission before test:', Notification.permission);
+    console.log('📱 User agent:', navigator.userAgent);
+    
+    const result = notifyNewOrder(testOrder);
+    
+    // Show visual feedback
+    if (result.notification) {
+      alert('✅ Test notification sent! Check your notifications.');
+    } else {
+      alert('❌ Notification failed!\n\nSound: ' + (result.sound ? 'OK' : 'Failed') + 
+            '\nNotification: Failed' +
+            '\n\nErrors: ' + (result.errors.join(', ') || 'Unknown') +
+            '\n\nCheck browser console for details.');
+    }
   }
 
   // Fetch colors on mount
@@ -459,6 +495,68 @@ export default function OrdersPage() {
           </Tooltip>
         </Box>
       </Box>
+
+      {/* Debug Panel */}
+      {deviceSupport && (
+        <Paper variant="outlined" sx={{ mb: 2, overflow: 'hidden' }}>
+          <Button
+            fullWidth
+            onClick={() => setShowDebug(!showDebug)}
+            endIcon={<ExpandMoreIcon sx={{ transform: showDebug ? 'rotate(180deg)' : 'rotate(0)', transition: '0.3s' }} />}
+            sx={{ justifyContent: 'space-between', p: 1.5, textTransform: 'none' }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              🔍 Notification Debug Info
+            </Typography>
+          </Button>
+          
+          {showDebug && (
+            <Box sx={{ p: 2, pt: 0, bgcolor: 'grey.50' }}>
+              <Stack spacing={1}>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Device Type:</Typography>
+                  <Typography variant="body2" fontWeight="bold">{deviceSupport.deviceType}</Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Browser Support:</Typography>
+                  <Typography variant="body2">
+                    {debugInfo.notificationAPI ? '✅ Supported' : '❌ Not Supported'}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Permission Status:</Typography>
+                  <Typography variant="body2">
+                    {debugInfo.permission === 'granted' && '✅ Granted'}
+                    {debugInfo.permission === 'denied' && '❌ Denied'}
+                    {debugInfo.permission === 'default' && '⏸️ Not requested'}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Platform:</Typography>
+                  <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>{debugInfo.platform}</Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">User Agent:</Typography>
+                  <Typography variant="body2" sx={{ fontSize: '0.7rem', wordBreak: 'break-all' }}>
+                    {debugInfo.userAgent?.substring(0, 100)}...
+                  </Typography>
+                </Box>
+                <Divider />
+                <Alert severity={deviceSupport.supported ? 'success' : 'error'} sx={{ mt: 1 }}>
+                  <Typography variant="caption">
+                    <strong>Status:</strong> {deviceSupport.reason}
+                  </Typography>
+                  {deviceSupport.recommendation && (
+                    <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
+                      <strong>Tip:</strong> {deviceSupport.recommendation}
+                    </Typography>
+                  )}
+                </Alert>
+              </Stack>
+            </Box>
+          )}
+        </Paper>
+      )}
 
       {/* Mobile Device Warning - iOS */}
       {deviceSupport && deviceSupport.deviceType === 'iOS' && notificationsEnabled && (
