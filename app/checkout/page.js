@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/lib/LanguageContext';
 import { useCart } from '@/lib/CartContext';
+import { trackInitiateCheckout } from '@/lib/metaPixelTracking';
 import Header from '@/components/client/Header';
 import Footer from '@/components/client/Footer';
 import WhatsAppButton from '@/components/client/WhatsAppButton';
@@ -141,10 +142,16 @@ export default function CheckoutPage() {
   }, []);
 
   // Redirect to cart if empty (but not if order was just placed or direct order or still checking)
+  // Also track InitiateCheckout when page loads with items
   useEffect(() => {
     if (!isCheckingDirectOrder && items.length === 0 && !orderPlaced) {
       router.push('/cart');
+    } else if (!isCheckingDirectOrder && items.length > 0 && !orderPlaced) {
+      // Track InitiateCheckout event when checkout page loads with items
+      const total = getTotal();
+      trackInitiateCheckout(items, total);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items.length, router, orderPlaced, isCheckingDirectOrder]);
 
   // Calculate delivery price when wilaya or delivery type changes
@@ -333,6 +340,17 @@ export default function CheckoutPage() {
       if (res.ok) {
         const data = await res.json();
         setOrderPlaced(true);
+        
+        // Store order data for Purchase tracking on success page
+        const orderDataForTracking = {
+          orderId: data._id || data.id,
+          items: orderPayload.items,
+          total: orderPayload.total,
+          subtotal: orderPayload.subtotal,
+          shipping: orderPayload.deliveryPrice
+        };
+        sessionStorage.setItem('completedOrder', JSON.stringify(orderDataForTracking));
+        
         if (!directOrderItem) {
           clearCart();
         }

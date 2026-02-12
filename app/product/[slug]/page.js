@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/LanguageContext';
 import { useCart } from '@/lib/CartContext';
+import { trackViewContent } from '@/lib/metaPixelTracking';
 import Header from '@/components/client/Header';
 import Footer from '@/components/client/Footer';
 import WhatsAppButton from '@/components/client/WhatsAppButton';
@@ -65,6 +66,9 @@ export default function ProductDetailPage() {
       if (res.ok) {
         const data = await res.json();
         setProduct(data);
+        
+        // Track ViewContent event for Meta Pixel
+        trackViewContent(data);
       }
     } catch (err) {
       console.error('Error fetching product:', err);
