@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import { LanguageProvider } from "@/lib/LanguageContext";
 import { CartProvider } from "@/lib/CartContext";
@@ -31,7 +32,9 @@ export default function RootLayout({ children }) {
             <CartProvider>
               {children}
               <FloatingCartButton />
-              <MetaPixel />
+              <Suspense fallback={null}>
+                <MetaPixel />
+              </Suspense>
             </CartProvider>
           </LanguageProvider>
         </AuthProvider>

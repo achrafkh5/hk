@@ -1,12 +1,12 @@
 'use client'
 
 import Script from 'next/script'
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 
 const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID
 
-export default function MetaPixel() {
+function PageViewTracker() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
@@ -17,9 +17,15 @@ export default function MetaPixel() {
     }
   }, [pathname, searchParams])
 
+  return null
+}
+
+export default function MetaPixel() {
   // Don't render if no pixel ID is configured
   if (!META_PIXEL_ID) {
-    console.warn('Meta Pixel ID not configured. Set NEXT_PUBLIC_META_PIXEL_ID in .env.local')
+    if (typeof window !== 'undefined') {
+      console.warn('Meta Pixel ID not configured. Set NEXT_PUBLIC_META_PIXEL_ID in .env.local')
+    }
     return null
   }
 
@@ -51,6 +57,11 @@ export default function MetaPixel() {
           `,
         }}
       />
+      
+      {/* Track route changes - wrapped in Suspense to prevent build errors */}
+      <Suspense fallback={null}>
+        <PageViewTracker />
+      </Suspense>
       
       {/* NoScript fallback for users with JavaScript disabled */}
       <noscript>
