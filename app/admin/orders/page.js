@@ -30,6 +30,7 @@ import {
   Switch,
   FormControlLabel,
   Tooltip,
+  Snackbar,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -127,6 +128,9 @@ export default function OrdersPage() {
   const [showDebug, setShowDebug] = useState(false);
   const [debugInfo, setDebugInfo] = useState({});
   
+  // Test result snackbar
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
+  
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setDeviceSupport(checkNotificationSupport());
@@ -177,32 +181,68 @@ export default function OrdersPage() {
 
   // Test notification sound
   function handleTestSound() {
-    playNotificationSound();
+    console.log('🔊 Testing sound...');
+    try {
+      playNotificationSound();
+      setSnackbar({ 
+        open: true, 
+        message: '🔊 Sound test played!', 
+        severity: 'success' 
+      });
+    } catch (error) {
+      console.error('❌ Sound test failed:', error);
+      setSnackbar({ 
+        open: true, 
+        message: '❌ Sound failed: ' + error.message, 
+        severity: 'error' 
+      });
+    }
   }
 
   // Test full notification (sound + popup)
   function handleTestNotification() {
-    const testOrder = {
-      _id: 'test-' + Date.now(),
-      customer: { name: 'Test Customer' },
-      total: 1500.00,
-      items: [{ productId: 'test', name: 'Test Product', qty: 1, price: 1500 }],
-    };
+    console.log('🧪 Testing full notification...');
+    console.log('🔍 Permission:', Notification?.permission);
+    console.log('📱 Device:', navigator.userAgent);
     
-    console.log('🧪 Testing full notification with test order');
-    console.log('🔍 Permission before test:', Notification.permission);
-    console.log('📱 User agent:', navigator.userAgent);
-    
-    const result = notifyNewOrder(testOrder);
-    
-    // Show visual feedback
-    if (result.notification) {
-      alert('✅ Test notification sent! Check your notifications.');
-    } else {
-      alert('❌ Notification failed!\n\nSound: ' + (result.sound ? 'OK' : 'Failed') + 
-            '\nNotification: Failed' +
-            '\n\nErrors: ' + (result.errors.join(', ') || 'Unknown') +
-            '\n\nCheck browser console for details.');
+    try {
+      const testOrder = {
+        _id: 'test-' + Date.now(),
+        customer: { name: 'Test Customer' },
+        total: 1500.00,
+        items: [{ productId: 'test', name: 'Test Product', qty: 1, price: 1500 }],
+      };
+      
+      const result = notifyNewOrder(testOrder);
+      console.log('📊 Test result:', result);
+      
+      // Show visual feedback in UI
+      if (result.notification && result.sound) {
+        setSnackbar({ 
+          open: true, 
+          message: '✅ Test successful! Sound and notification sent.', 
+          severity: 'success' 
+        });
+      } else if (result.sound && !result.notification) {
+        setSnackbar({ 
+          open: true, 
+          message: '⚠️ Sound OK, but notification failed. Check console.', 
+          severity: 'warning' 
+        });
+      } else {
+        setSnackbar({ 
+          open: true, 
+          message: `❌ Test failed: ${result.error || 'Unknown error'}`, 
+          severity: 'error' 
+        });
+      }
+    } catch (error) {
+      console.error('❌ Test exception:', error);
+      setSnackbar({ 
+        open: true, 
+        message: '❌ Test crashed: ' + error.message, 
+        severity: 'error' 
+      });
     }
   }
 
@@ -1075,6 +1115,22 @@ export default function OrdersPage() {
           )}
         </DialogActions>
       </Dialog>
+
+      {/* Test Result Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setSnackbar({ ...snackbar, open: false })} 
+          severity={snackbar.severity}
+          sx={{ width: '100%', fontSize: '1rem' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
 
       {/* Delete Confirmation Dialog */}
       <Dialog
