@@ -37,8 +37,10 @@ import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import BugReportIcon from '@mui/icons-material/BugReport';
+import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
 import { useOrderNotifications } from '@/hooks/useOrderNotifications';
 import { playNotificationSound, notifyNewOrder } from '@/lib/orderNotifications';
+import { checkNotificationSupport } from '@/lib/deviceDetection';
 
 const ORDER_STATUSES = [
   { value: 'pending', label: 'Pending' },
@@ -118,6 +120,15 @@ export default function OrdersPage() {
     }
     return true;
   });
+
+  // Check device support
+  const [deviceSupport, setDeviceSupport] = useState(null);
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setDeviceSupport(checkNotificationSupport());
+    }
+  }, []);
 
   // Use order notifications hook
   const { hasPermission, requestPermission, error: notificationError } = useOrderNotifications(
@@ -449,8 +460,32 @@ export default function OrdersPage() {
         </Box>
       </Box>
 
+      {/* Mobile Device Warning - iOS */}
+      {deviceSupport && deviceSupport.deviceType === 'iOS' && notificationsEnabled && (
+        <Alert 
+          severity="error" 
+          sx={{ mb: 2 }}
+          icon={<PhoneAndroidIcon />}
+        >
+          <strong>Mobile Limitation:</strong> iOS devices (iPhone/iPad) do not support web notifications. 
+          Please use a desktop browser (Chrome, Firefox, Edge) to receive order alerts.
+        </Alert>
+      )}
+
+      {/* Mobile Device Warning - Android */}
+      {deviceSupport && deviceSupport.deviceType === 'Android' && notificationsEnabled && (
+        <Alert 
+          severity="info" 
+          sx={{ mb: 2 }}
+          icon={<PhoneAndroidIcon />}
+        >
+          <strong>Mobile Device Detected:</strong> Android Chrome supports notifications, but desktop browsers provide a better experience. 
+          Make sure notifications are enabled in your Android settings.
+        </Alert>
+      )}
+
       {/* Permission Warning */}
-      {notificationsEnabled && !hasPermission && (
+      {notificationsEnabled && !hasPermission && deviceSupport?.supported && (
         <Alert severity="warning" sx={{ mb: 2 }} action={
           <Button color="inherit" size="small" onClick={requestPermission}>
             Allow
@@ -468,9 +503,16 @@ export default function OrdersPage() {
       )}
 
       {/* Active Notifications Info */}
-      {notificationsEnabled && hasPermission && !notificationError && (
+      {notificationsEnabled && hasPermission && !notificationError && deviceSupport?.deviceType === 'Desktop' && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          ✅ Notifications active! You&apos;ll receive alerts with sound when new orders arrive (checking every 30 seconds)
+        </Alert>
+      )}
+      
+      {/* Active Notifications Info - Android */}
+      {notificationsEnabled && hasPermission && !notificationError && deviceSupport?.deviceType === 'Android' && (
         <Alert severity="info" sx={{ mb: 2 }}>
-          🔔 You&apos;ll receive a notification with sound when new orders arrive (checking every 30 seconds)
+          🔔 Notifications enabled on Android. Keep this browser tab open to receive order alerts.
         </Alert>
       )}
 
