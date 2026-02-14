@@ -44,6 +44,7 @@ const DELIVERY_PRICES = {
   "M'Sila": { domicile: 850, stopdesk: 500 },
   Mascara: { domicile: 900, stopdesk: 600 },
   Ouargla: { domicile: 1100, stopdesk: 800 },
+  Oran: { domicile: 850, stopdesk: 450 },
   "El Bayadh": { domicile: 1100, stopdesk: 800 },
   Illizi: { domicile: 2000, stopdesk: 1700 },
   "Bordj Bou Arreridj": { domicile: 850, stopdesk: 450 },
