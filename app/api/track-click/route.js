@@ -32,6 +32,8 @@ export async function POST(request) {
       productId: extraData.productId,
       productName: extraData.productName,
       price: extraData.price,
+      color: extraData.color,
+      size: extraData.size,
       clickedAt: new Date()
     } : null;
 
