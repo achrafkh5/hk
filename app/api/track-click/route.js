@@ -5,7 +5,7 @@ import { getDb } from '@/lib/mongodb';
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { clickType } = body;
+    const { clickType, extraData } = body;
 
     // Validate click type
     const validTypes = ['whatsapp_contact', 'order_now', 'complete_order'];
@@ -27,15 +27,30 @@ export async function POST(request) {
     // Find existing user by IP
     const existingUser = await usersCollection.findOne({ ip });
 
+    // Prepare product click history entry for order_now
+    const productClickEntry = clickType === 'order_now' && extraData ? {
+      productId: extraData.productId,
+      productName: extraData.productName,
+      price: extraData.price,
+      clickedAt: new Date()
+    } : null;
+
     if (existingUser) {
       // Update existing user - increment the click count for this type
       const updateField = `clicks.${clickType}`;
+      const updateOps = { 
+        $inc: { [updateField]: 1 },
+        $set: { lastActivity: new Date() }
+      };
+      
+      // Add product to order_now history if applicable
+      if (productClickEntry) {
+        updateOps.$push = { orderNowProducts: productClickEntry };
+      }
+      
       await usersCollection.updateOne(
         { ip },
-        { 
-          $inc: { [updateField]: 1 },
-          $set: { lastActivity: new Date() }
-        }
+        updateOps
       );
 
       // Get updated user data
@@ -57,6 +72,7 @@ export async function POST(request) {
           order_now: clickType === 'order_now' ? 1 : 0,
           complete_order: clickType === 'complete_order' ? 1 : 0
         },
+        orderNowProducts: productClickEntry ? [productClickEntry] : [],
         createdAt: new Date(),
         lastActivity: new Date()
       };

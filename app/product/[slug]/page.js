@@ -218,8 +218,12 @@ export default function ProductDetailPage() {
       return;
     }
 
-    // Track the Order Now click
-    trackClick(CLICK_TYPES.ORDER_NOW);
+    // Track the Order Now click with product info
+    trackClick(CLICK_TYPES.ORDER_NOW, {
+      productId: product._id,
+      productName: typeof product.name === 'object' ? (product.name[lang] || product.name.en) : product.name,
+      price: product.price
+    });
 
     // Store product details in sessionStorage for checkout
     const displayImages = getDisplayImages();
