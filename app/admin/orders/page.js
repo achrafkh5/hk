@@ -49,6 +49,8 @@ const ORDER_STATUSES = [
   { value: 'paid', label: 'Paid' },
   { value: 'shipped', label: 'Shipped' },
   { value: 'cancelled', label: 'Cancelled' },
+  { value: 'confirmed', label: 'Confirmed' },
+  { value: 'retourned', label: 'Retourned' },
 ];
 
 // Get chip color based on status
@@ -57,9 +59,13 @@ function getStatusColor(status) {
     case 'paid':
       return 'primary';
     case 'shipped':
-      return 'success';
+      return 'secondary';
     case 'cancelled':
       return 'default';
+    case 'confirmed':
+      return 'success';
+    case 'retourned':
+      return 'error';
     default:
       return 'warning';
   }

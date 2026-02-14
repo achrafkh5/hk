@@ -84,7 +84,7 @@ export async function PUT(request, { params }) {
 
     // Update status if provided
     if (status) {
-      const validStatuses = ['pending', 'paid', 'shipped', 'cancelled'];
+      const validStatuses = ['pending', 'paid', 'shipped', 'cancelled', 'confirmed', 'retourned'];
       if (!validStatuses.includes(status)) {
         return NextResponse.json(
           { error: 'Invalid status. Must be one of: ' + validStatuses.join(', ') },
