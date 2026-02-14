@@ -222,7 +222,9 @@ export default function ProductDetailPage() {
     trackClick(CLICK_TYPES.ORDER_NOW, {
       productId: product._id,
       productName: typeof product.name === 'object' ? (product.name[lang] || product.name.en) : product.name,
-      price: product.price
+      price: product.price,
+      color: selectedColor ? getColorName(selectedColor) : null,
+      size: selectedSize || null
     });
 
     // Store product details in sessionStorage for checkout
