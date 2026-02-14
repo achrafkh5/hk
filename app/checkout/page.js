@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { useLanguage } from '@/lib/LanguageContext';
 import { useCart } from '@/lib/CartContext';
 import { trackInitiateCheckout } from '@/lib/metaPixelTracking';
+import { trackClick, CLICK_TYPES } from '@/lib/trackingHelper';
 import Header from '@/components/client/Header';
 import Footer from '@/components/client/Footer';
 import WhatsAppButton from '@/components/client/WhatsAppButton';
@@ -340,6 +341,9 @@ export default function CheckoutPage() {
       if (res.ok) {
         const data = await res.json();
         setOrderPlaced(true);
+        
+        // Track the Complete Order click
+        trackClick(CLICK_TYPES.COMPLETE_ORDER);
         
         // Store order data for Purchase tracking on success page
         const orderDataForTracking = {

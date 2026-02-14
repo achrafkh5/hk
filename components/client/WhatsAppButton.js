@@ -1,11 +1,15 @@
 'use client';
 
 import { useLanguage } from '@/lib/LanguageContext';
+import { trackClick, CLICK_TYPES } from '@/lib/trackingHelper';
 
 export default function WhatsAppButton() {
   const { t } = useLanguage();
 
-  const handleClick = () => {
+  const handleClick = async () => {
+    // Track the WhatsApp contact click
+    trackClick(CLICK_TYPES.WHATSAPP_CONTACT);
+    
     const message = encodeURIComponent(t('whatsappMessage'));
     const phoneNumber = '+213798632751'; 
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;

@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useLanguage } from '@/lib/LanguageContext';
 import { useCart } from '@/lib/CartContext';
 import { trackViewContent } from '@/lib/metaPixelTracking';
+import { trackClick, CLICK_TYPES } from '@/lib/trackingHelper';
 import Header from '@/components/client/Header';
 import Footer from '@/components/client/Footer';
 import WhatsAppButton from '@/components/client/WhatsAppButton';
@@ -216,6 +217,9 @@ export default function ProductDetailPage() {
       alert(t('selectSize'));
       return;
     }
+
+    // Track the Order Now click
+    trackClick(CLICK_TYPES.ORDER_NOW);
 
     // Store product details in sessionStorage for checkout
     const displayImages = getDisplayImages();
