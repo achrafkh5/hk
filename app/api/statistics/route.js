@@ -77,11 +77,37 @@ export async function GET() {
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
+    // Get order status counts
+    const statusCounts = await db.collection('orders').aggregate([
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 },
+        },
+      },
+    ]).toArray();
+
+    // Format status counts into object
+    const ordersByStatus = {
+      pending: 0,
+      paid: 0,
+      shipped: 0,
+      cancelled: 0,
+      confirmed: 0,
+      retourned: 0,
+    };
+    statusCounts.forEach(item => {
+      if (item._id && ordersByStatus.hasOwnProperty(item._id)) {
+        ordersByStatus[item._id] = item.count;
+      }
+    });
+
     return NextResponse.json({
       totalOrders,
       totalRevenue,
       todayOrders,
       ordersPerDay,
+      ordersByStatus,
     });
   } catch (error) {
     console.error('Error fetching statistics:', error);

@@ -16,7 +16,30 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
 } from 'recharts';
+
+// Status colors for pie chart (matching orders page)
+const STATUS_COLORS = {
+  pending: '#ed6c02',
+  paid: '#1976d2',
+  shipped: '#9c27b0',
+  cancelled: '#9e9e9e',
+  confirmed: '#2e7d32',
+  retourned: '#d32f2f',
+};
+
+const STATUS_LABELS = {
+  pending: 'Pending',
+  paid: 'Paid',
+  shipped: 'Shipped',
+  cancelled: 'Cancelled',
+  confirmed: 'Confirmed',
+  retourned: 'Retourned',
+};
 
 // Format price for display
 function formatPrice(price) {
@@ -57,6 +80,17 @@ export default function StatisticsPage() {
     date: formatChartDate(item.date),
     orders: item.count,
   })) || [];
+
+  // Prepare pie chart data for order statuses
+  const statusChartData = stats?.ordersByStatus
+    ? Object.entries(stats.ordersByStatus)
+        .filter(([, count]) => count > 0)
+        .map(([status, count]) => ({
+          name: STATUS_LABELS[status] || status,
+          value: count,
+          color: STATUS_COLORS[status] || '#9ca3af',
+        }))
+    : [];
 
   if (loading) {
     return (
@@ -113,6 +147,54 @@ export default function StatisticsPage() {
           </Paper>
         </Grid>
       </Grid>
+
+      {/* Order Status Pie Chart */}
+      <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
+        <Typography variant="subtitle1" sx={{ mb: 3, fontWeight: 500 }}>
+          Orders by Status
+        </Typography>
+        
+        {statusChartData.length > 0 ? (
+          <Box sx={{ width: '100%', height: 300, display: 'flex', justifyContent: 'center' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={statusChartData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={3}
+                  dataKey="value"
+                  label={({ name, value }) => `${name}: ${value}`}
+                  labelLine={{ stroke: '#6b7280', strokeWidth: 1 }}
+                >
+                  {statusChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: 4,
+                    fontSize: 13,
+                  }}
+                />
+                <Legend
+                  verticalAlign="bottom"
+                  height={36}
+                  formatter={(value) => <span style={{ color: '#374151', fontSize: 13 }}>{value}</span>}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </Box>
+        ) : (
+          <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
+            No orders yet
+          </Typography>
+        )}
+      </Paper>
 
       {/* Orders Chart */}
       <Paper variant="outlined" sx={{ p: 3 }}>

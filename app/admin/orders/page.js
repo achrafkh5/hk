@@ -115,6 +115,7 @@ export default function OrdersPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [error, setError] = useState('');
+  const [orderProducts, setOrderProducts] = useState({}); // Store product details by productId
 
   // Filter
   const [filterStatus, setFilterStatus] = useState('');
@@ -331,9 +332,32 @@ export default function OrdersPage() {
     setEditMode(false);
     setEditedOrder(null);
     setError('');
+    setOrderProducts({});
   }
 
-  function handleEditModeToggle() {
+  async function fetchOrderProducts(items) {
+    const productsMap = {};
+    for (const item of items) {
+      if (item.productId && !productsMap[item.productId]) {
+        try {
+          const res = await fetch(`/api/products/${item.productId}`);
+          if (res.ok) {
+            const product = await res.json();
+            productsMap[item.productId] = product;
+          }
+        } catch (err) {
+          console.error('Error fetching product:', err);
+        }
+      }
+    }
+    setOrderProducts(productsMap);
+  }
+
+  async function handleEditModeToggle() {
+    if (!editMode && editedOrder?.items) {
+      // Entering edit mode - fetch product details
+      await fetchOrderProducts(editedOrder.items);
+    }
     setEditMode(!editMode);
     setError('');
   }
@@ -951,14 +975,57 @@ export default function OrdersPage() {
                           </TableCell>
                           <TableCell>
                             {editMode ? (
-                              <TextField
-                                value={item.color || ''}
-                                onChange={(e) => handleItemChange(index, 'color', e.target.value)}
-                                size="small"
-                                fullWidth
-                                disabled
-                                helperText="Color cannot be edited"
-                              />
+                              (() => {
+                                const product = orderProducts[item.productId];
+                                const availableColors = product?.colors || [];
+                                return availableColors.length > 0 ? (
+                                  <FormControl size="small" fullWidth>
+                                    <Select
+                                      value={item.color || ''}
+                                      onChange={(e) => handleItemChange(index, 'color', e.target.value)}
+                                      displayEmpty
+                                    >
+                                      <MenuItem value="">
+                                        <em>No Color</em>
+                                      </MenuItem>
+                                      {availableColors.map((colorId) => {
+                                        const colorObj = colors.find(c => c._id === colorId);
+                                        return (
+                                          <MenuItem key={colorId} value={colorId}>
+                                            <Stack direction="row" spacing={1} alignItems="center">
+                                              <Box
+                                                sx={{
+                                                  width: 16,
+                                                  height: 16,
+                                                  borderRadius: '50%',
+                                                  bgcolor: colorObj?.hex || '#000',
+                                                  border: '1px solid',
+                                                  borderColor: colorObj?.hex === '#FFFFFF' ? 'grey.300' : 'transparent',
+                                                }}
+                                              />
+                                              <span>{colorObj?.name?.en || colorId}</span>
+                                            </Stack>
+                                          </MenuItem>
+                                        );
+                                      })}
+                                    </Select>
+                                  </FormControl>
+                                ) : (
+                                  <Stack direction="row" spacing={1} alignItems="center">
+                                    <Box
+                                      sx={{
+                                        width: 20,
+                                        height: 20,
+                                        borderRadius: '50%',
+                                        bgcolor: getColorHex(item.color),
+                                        border: '1px solid',
+                                        borderColor: getColorHex(item.color) === '#FFFFFF' ? 'grey.300' : 'transparent',
+                                      }}
+                                    />
+                                    <Typography variant="body2">{getColorName(item.color) || 'No colors available'}</Typography>
+                                  </Stack>
+                                );
+                              })()
                             ) : item.color ? (
                               <Stack direction="row" spacing={1} alignItems="center">
                                 <Box
