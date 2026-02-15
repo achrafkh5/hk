@@ -21,10 +21,12 @@ export async function GET() {
         $group: {
           _id: null,
           total: { $sum: '$total' },
+          subtotal: { $sum: '$subtotal' },
         },
       },
     ]).toArray();
     const totalRevenue = revenueResult[0]?.total || 0;
+    const totalProductsRevenue = revenueResult[0]?.subtotal || 0;
     
     // Get today's orders count
     const today = new Date();
@@ -77,34 +79,39 @@ export async function GET() {
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    // Get order status counts
+    // Get order status counts and subtotals
     const statusCounts = await db.collection('orders').aggregate([
       {
         $group: {
           _id: '$status',
           count: { $sum: 1 },
+          subtotal: { $sum: '$subtotal' },
         },
       },
     ]).toArray();
 
     // Format status counts into object
     const ordersByStatus = {
-      pending: 0,
-      paid: 0,
-      shipped: 0,
-      cancelled: 0,
-      confirmed: 0,
-      retourned: 0,
+      pending: { count: 0, subtotal: 0 },
+      paid: { count: 0, subtotal: 0 },
+      shipped: { count: 0, subtotal: 0 },
+      cancelled: { count: 0, subtotal: 0 },
+      confirmed: { count: 0, subtotal: 0 },
+      retourned: { count: 0, subtotal: 0 },
     };
     statusCounts.forEach(item => {
       if (item._id && ordersByStatus.hasOwnProperty(item._id)) {
-        ordersByStatus[item._id] = item.count;
+        ordersByStatus[item._id] = {
+          count: item.count,
+          subtotal: item.subtotal || 0,
+        };
       }
     });
 
     return NextResponse.json({
       totalOrders,
       totalRevenue,
+      totalProductsRevenue,
       todayOrders,
       ordersPerDay,
       ordersByStatus,

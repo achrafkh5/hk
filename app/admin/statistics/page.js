@@ -84,10 +84,10 @@ export default function StatisticsPage() {
   // Prepare pie chart data for order statuses
   const statusChartData = stats?.ordersByStatus
     ? Object.entries(stats.ordersByStatus)
-        .filter(([, count]) => count > 0)
-        .map(([status, count]) => ({
+        .filter(([, data]) => data.count > 0)
+        .map(([status, data]) => ({
           name: STATUS_LABELS[status] || status,
-          value: count,
+          value: data.count,
           color: STATUS_COLORS[status] || '#9ca3af',
         }))
     : [];
@@ -128,10 +128,21 @@ export default function StatisticsPage() {
         <Grid size={{ xs: 12, sm: 4 }}>
           <Paper variant="outlined" sx={{ p: 3 }}>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              Total Revenue
+              Total Revenue (with delivery)
             </Typography>
             <Typography variant="h4" sx={{ fontWeight: 500 }}>
               {formatPrice(stats?.totalRevenue)}
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <Paper variant="outlined" sx={{ p: 3 }}>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Products Revenue (no delivery)
+            </Typography>
+            <Typography variant="h4" sx={{ fontWeight: 500 }}>
+              {formatPrice(stats?.totalProductsRevenue)}
             </Typography>
           </Paper>
         </Grid>
@@ -146,6 +157,35 @@ export default function StatisticsPage() {
             </Typography>
           </Paper>
         </Grid>
+      </Grid>
+
+      {/* Status Cards */}
+      <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 500 }}>
+        Orders by Status
+      </Typography>
+      <Grid container spacing={2} sx={{ mb: 4 }}>
+        {Object.entries(stats?.ordersByStatus || {}).map(([status, data]) => (
+          <Grid key={status} size={{ xs: 6, sm: 4, md: 2 }}>
+            <Paper 
+              variant="outlined" 
+              sx={{ 
+                p: 2, 
+                borderLeft: 4, 
+                borderLeftColor: STATUS_COLORS[status] || '#9ca3af',
+              }}
+            >
+              <Typography variant="body2" color="text.secondary" sx={{ textTransform: 'capitalize' }}>
+                {STATUS_LABELS[status] || status}
+              </Typography>
+              <Typography variant="h5" sx={{ fontWeight: 500 }}>
+                {data?.count || 0}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {formatPrice(data?.subtotal || 0)}
+              </Typography>
+            </Paper>
+          </Grid>
+        ))}
       </Grid>
 
       {/* Order Status Pie Chart */}

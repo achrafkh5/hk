@@ -12,6 +12,25 @@ import {
   Stack,
 } from '@mui/material';
 
+// Status colors (matching orders page)
+const STATUS_COLORS = {
+  pending: '#ed6c02',
+  paid: '#1976d2',
+  shipped: '#9c27b0',
+  cancelled: '#9e9e9e',
+  confirmed: '#2e7d32',
+  retourned: '#d32f2f',
+};
+
+const STATUS_LABELS = {
+  pending: 'Pending',
+  paid: 'Paid',
+  shipped: 'Shipped',
+  cancelled: 'Cancelled',
+  confirmed: 'Confirmed',
+  retourned: 'Retourned',
+};
+
 // Format price for display
 function formatPrice(price) {
   return `${parseFloat(price || 0).toFixed(2)} DA`;
@@ -92,6 +111,35 @@ export default function AdminDashboardPage() {
                 </Typography>
               </Paper>
             </Grid>
+          </Grid>
+
+          {/* Orders by Status */}
+          <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 500 }}>
+            Orders by Status
+          </Typography>
+          <Grid container spacing={2} sx={{ mb: 4 }}>
+            {Object.entries(stats?.ordersByStatus || {}).map(([status, data]) => (
+              <Grid key={status} size={{ xs: 6, sm: 4, md: 2 }}>
+                <Paper 
+                  variant="outlined" 
+                  sx={{ 
+                    p: 2, 
+                    borderLeft: 4, 
+                    borderLeftColor: STATUS_COLORS[status] || '#9ca3af',
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary" sx={{ textTransform: 'capitalize' }}>
+                    {STATUS_LABELS[status] || status}
+                  </Typography>
+                  <Typography variant="h5" sx={{ fontWeight: 500 }}>
+                    {data?.count || 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {formatPrice(data?.subtotal || 0)}
+                  </Typography>
+                </Paper>
+              </Grid>
+            ))}
           </Grid>
 
           {/* Quick Links */}

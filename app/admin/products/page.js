@@ -82,6 +82,7 @@ export default function ProductsPage() {
     descriptionFr: '',
     descriptionAr: '',
     price: '',
+    buyingPrice: '',
     stock: '',
     categoryId: '',
     images: [],
@@ -173,6 +174,7 @@ export default function ProductsPage() {
         descriptionFr: product.description?.fr || '',
         descriptionAr: product.description?.ar || '',
         price: product.price || '',
+        buyingPrice: product.buyingPrice || '',
         stock: product.stock || '',
         categoryId: product.categoryId || '',
         images: product.images || [],
@@ -193,6 +195,7 @@ export default function ProductsPage() {
         descriptionFr: '',
         descriptionAr: '',
         price: '',
+        buyingPrice: '',
         stock: '',
         categoryId: '',
         images: [],
@@ -328,6 +331,7 @@ export default function ProductsPage() {
         ar: formData.descriptionAr.trim(),
       },
       price: parseFloat(formData.price),
+      buyingPrice: parseFloat(formData.buyingPrice) || 0,
       stock: parseInt(formData.stock),
       categoryId: formData.categoryId || null,
       images: Array.isArray(formData.images) ? formData.images : [],
@@ -742,12 +746,22 @@ export default function ProductsPage() {
             </Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
-                label="Price"
+                label="Selling Price"
                 type="number"
                 value={formData.price}
                 onChange={(e) => handleInputChange('price', e.target.value)}
                 fullWidth
                 required
+                slotProps={{
+                  htmlInput: { min: 0, step: 0.01 },
+                }}
+              />
+              <TextField
+                label="Buying Price"
+                type="number"
+                value={formData.buyingPrice}
+                onChange={(e) => handleInputChange('buyingPrice', e.target.value)}
+                fullWidth
                 slotProps={{
                   htmlInput: { min: 0, step: 0.01 },
                 }}

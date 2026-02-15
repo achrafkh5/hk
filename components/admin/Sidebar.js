@@ -26,6 +26,7 @@ const navItems = [
   { label: 'Products', href: '/admin/products' },
   { label: 'Orders', href: '/admin/orders' },
   { label: 'Statistics', href: '/admin/statistics' },
+  { label: 'Finance', href: '/admin/finance' },
 ];
 
 export default function Sidebar({ mobileOpen, onMobileClose }) {
