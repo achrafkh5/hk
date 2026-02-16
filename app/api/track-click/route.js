@@ -34,7 +34,7 @@ export async function POST(request) {
       price: extraData.price,
       color: extraData.color,
       size: extraData.size,
-      clickedAt: new Date()
+      clickedAt: new Date().toISOString()
     } : null;
 
     if (existingUser) {
@@ -42,7 +42,7 @@ export async function POST(request) {
       const updateField = `clicks.${clickType}`;
       const updateOps = { 
         $inc: { [updateField]: 1 },
-        $set: { lastActivity: new Date() }
+        $set: { lastActivity: new Date().toISOString() }
       };
       
       // Add product to order_now history if applicable
@@ -75,8 +75,8 @@ export async function POST(request) {
           complete_order: clickType === 'complete_order' ? 1 : 0
         },
         orderNowProducts: productClickEntry ? [productClickEntry] : [],
-        createdAt: new Date(),
-        lastActivity: new Date()
+        createdAt: new Date().toISOString(),
+        lastActivity: new Date().toISOString()
       };
 
       await usersCollection.insertOne(newUser);
