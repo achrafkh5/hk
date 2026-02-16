@@ -1,6 +1,31 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 
+// Helper function to format dates
+function formatDate(date) {
+  if (!date) return null;
+  return new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+// Format user object with readable dates
+function formatUserDates(user) {
+  return {
+    ...user,
+    createdAt: formatDate(user.createdAt),
+    lastActivity: formatDate(user.lastActivity),
+    orderNowProducts: user.orderNowProducts?.map(product => ({
+      ...product,
+      clickedAt: formatDate(product.clickedAt)
+    })) || []
+  };
+}
+
 // POST - Track user click
 export async function POST(request) {
   try {
@@ -34,7 +59,7 @@ export async function POST(request) {
       price: extraData.price,
       color: extraData.color,
       size: extraData.size,
-      clickedAt: new Date().toISOString()
+      clickedAt: new Date()
     } : null;
 
     if (existingUser) {
@@ -42,7 +67,7 @@ export async function POST(request) {
       const updateField = `clicks.${clickType}`;
       const updateOps = { 
         $inc: { [updateField]: 1 },
-        $set: { lastActivity: new Date().toISOString() }
+        $set: { lastActivity: new Date() }
       };
       
       // Add product to order_now history if applicable
@@ -75,8 +100,8 @@ export async function POST(request) {
           complete_order: clickType === 'complete_order' ? 1 : 0
         },
         orderNowProducts: productClickEntry ? [productClickEntry] : [],
-        createdAt: new Date().toISOString(),
-        lastActivity: new Date().toISOString()
+        createdAt: new Date(),
+        lastActivity: new Date()
       };
 
       await usersCollection.insertOne(newUser);
@@ -116,14 +141,14 @@ export async function GET(request) {
           { status: 404 }
         );
       }
-      return NextResponse.json(user);
+      return NextResponse.json(formatUserDates(user));
     } else {
       // Get all users
       const users = await usersCollection
         .find({})
         .sort({ lastActivity: -1 })
         .toArray();
-      return NextResponse.json(users);
+      return NextResponse.json(users.map(formatUserDates));
     }
   } catch (error) {
     console.error('Error fetching user clicks:', error);
