@@ -602,7 +602,7 @@ export default function ProductsPage() {
                       {getCategoryName(product.categoryId)}
                     </Typography>
                   </TableCell>
-                  <TableCell>{formatPrice(product.price)}</TableCell>
+                  <TableCell>{formatPrice(product.salePrice || product.price)}</TableCell>
                   <TableCell>
                     {product.hasSize && product.sizes?.length > 0 ? (
                       <Box>
