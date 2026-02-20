@@ -82,6 +82,7 @@ export default function ProductsPage() {
     descriptionFr: '',
     descriptionAr: '',
     price: '',
+    salePrice: '',
     buyingPrice: '',
     stock: '',
     categoryId: '',
@@ -174,6 +175,7 @@ export default function ProductsPage() {
         descriptionFr: product.description?.fr || '',
         descriptionAr: product.description?.ar || '',
         price: product.price || '',
+        salePrice: product.salePrice || '',
         buyingPrice: product.buyingPrice || '',
         stock: product.stock || '',
         categoryId: product.categoryId || '',
@@ -195,6 +197,7 @@ export default function ProductsPage() {
         descriptionFr: '',
         descriptionAr: '',
         price: '',
+        salePrice: '',
         buyingPrice: '',
         stock: '',
         categoryId: '',
@@ -331,6 +334,7 @@ export default function ProductsPage() {
         ar: formData.descriptionAr.trim(),
       },
       price: parseFloat(formData.price),
+      salePrice: formData.salePrice ? parseFloat(formData.salePrice) : null,
       buyingPrice: parseFloat(formData.buyingPrice) || 0,
       stock: parseInt(formData.stock),
       categoryId: formData.categoryId || null,
@@ -742,11 +746,11 @@ export default function ProductsPage() {
 
             {/* Product Details */}
             <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 2 }}>
-              Details
+              Pricing
             </Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
-                label="Selling Price"
+                label="Regular Price"
                 type="number"
                 value={formData.price}
                 onChange={(e) => handleInputChange('price', e.target.value)}
@@ -755,7 +759,21 @@ export default function ProductsPage() {
                 slotProps={{
                   htmlInput: { min: 0, step: 0.01 },
                 }}
+                helperText="Original price before discount"
               />
+              <TextField
+                label="Sale Price (Solde)"
+                type="number"
+                value={formData.salePrice}
+                onChange={(e) => handleInputChange('salePrice', e.target.value)}
+                fullWidth
+                slotProps={{
+                  htmlInput: { min: 0, step: 0.01 },
+                }}
+                helperText={formData.salePrice && formData.price ? `${Math.round((1 - formData.salePrice / formData.price) * 100)}% OFF` : 'Leave empty for no sale'}
+              />
+            </Stack>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
                 label="Buying Price"
                 type="number"

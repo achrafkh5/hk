@@ -222,17 +222,20 @@ export default function ProductDetailPage() {
     trackClick(CLICK_TYPES.ORDER_NOW, {
       productId: product._id,
       productName: typeof product.name === 'object' ? (product.name[lang] || product.name.en) : product.name,
-      price: product.price,
+      price: product.salePrice || product.price,
       color: selectedColor ? getColorName(selectedColor) : null,
       size: selectedSize || null
     });
 
     // Store product details in sessionStorage for checkout
+    // Use sale price if available
     const displayImages = getDisplayImages();
+    const effectivePrice = product.salePrice || product.price;
     const orderItem = {
       productId: product._id,
       name: product.name,
-      price: product.price,
+      price: effectivePrice,
+      originalPrice: product.salePrice ? product.price : null,
       image: displayImages[0] || '',
       qty: quantity,
       color: selectedColor || null,
@@ -359,9 +362,26 @@ export default function ProductDetailPage() {
                 {getText(product.name)}
               </h1>
 
-              <p className="text-xl text-gray-900 mb-4">
-                {formatPrice(product.price)}
-              </p>
+              {/* Price Display */}
+              <div className="mb-4">
+                {product.salePrice ? (
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl font-semibold text-red-600">
+                      {formatPrice(product.salePrice)}
+                    </span>
+                    <span className="text-lg text-gray-400 line-through">
+                      {formatPrice(product.price)}
+                    </span>
+                    <span className="px-2 py-1 bg-red-600 text-white text-sm font-bold rounded">
+                      -{Math.round((1 - product.salePrice / product.price) * 100)}%
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-xl text-gray-900">
+                    {formatPrice(product.price)}
+                  </p>
+                )}
+              </div>
 
               {/* Available Colors */}
               {product.colors && product.colors.length > 0 && (

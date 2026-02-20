@@ -100,13 +100,30 @@ export default function FeaturedProducts() {
                     No image
                   </div>
                 )}
+              {/* Sale Badge */}
+              {product.salePrice && (
+                <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
+                  -{Math.round((1 - product.salePrice / product.price) * 100)}%
+                </div>
+              )}
               </div>
               <h3 className="text-gray-900 text-sm mb-1">
                 {getProductName(product)}
               </h3>
-              <p className="text-gray-600 text-sm font-medium">
-                {formatPrice(product.price)}
-              </p>
+              {product.salePrice ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-red-600 text-sm font-semibold">
+                    {formatPrice(product.salePrice)}
+                  </span>
+                  <span className="text-gray-400 text-xs line-through">
+                    {formatPrice(product.price)}
+                  </span>
+                </div>
+              ) : (
+                <p className="text-gray-600 text-sm font-medium">
+                  {formatPrice(product.price)}
+                </p>
+              )}
             </Link>
           ))}
         </div>

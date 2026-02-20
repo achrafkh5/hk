@@ -48,7 +48,7 @@ export async function PUT(request, { params }) {
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, description, price, buyingPrice, stock, categoryId, images, colors, hasSize, sizes, active, featured } = body;
+    const { name, description, price, salePrice, buyingPrice, stock, categoryId, images, colors, hasSize, sizes, active, featured } = body;
 
     if (!ObjectId.isValid(id)) {
       return NextResponse.json(
@@ -81,6 +81,7 @@ export async function PUT(request, { params }) {
             ar: description?.ar || '',
           },
           price: parseFloat(price),
+          salePrice: salePrice ? parseFloat(salePrice) : null,
           buyingPrice: parseFloat(buyingPrice) || 0,
           stock: parseInt(stock),
           categoryId: categoryId || null,

@@ -19,7 +19,7 @@ export async function GET(request) {
     const query = {};
     
     // Filter by status
-    if (status && ['pending', 'paid', 'shipped', 'cancelled', 'confirmed', 'routerned'].includes(status)) {
+    if (status && ['pending', 'paid', 'shipped', 'cancelled', 'confirmed', 'retourned'].includes(status)) {
       query.status = status;
     }
 
