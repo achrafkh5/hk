@@ -120,6 +120,11 @@ export default function OrdersPage() {
   // Filter
   const [filterStatus, setFilterStatus] = useState('');
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({ totalCount: 0, totalPages: 1, hasMore: false });
+  const ORDERS_PER_PAGE = 20;
+
   // Notifications
   const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
     // Load preference from localStorage
@@ -258,10 +263,15 @@ export default function OrdersPage() {
     fetchColors();
   }, []);
 
-  // Fetch orders on mount and when filter changes
+  // Fetch orders on mount and when filter or page changes
   useEffect(() => {
     fetchOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterStatus, currentPage]);
+
+  // Reset to page 1 when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
   }, [filterStatus]);
 
   async function fetchColors() {
@@ -293,16 +303,19 @@ export default function OrdersPage() {
   async function fetchOrders() {
     try {
       setLoading(true);
-      let url = '/api/orders';
+      const params = new URLSearchParams();
+      params.set('page', currentPage.toString());
+      params.set('limit', ORDERS_PER_PAGE.toString());
       
       if (filterStatus) {
-        url += `?status=${filterStatus}`;
+        params.set('status', filterStatus);
       }
 
-      const res = await fetch(url);
+      const res = await fetch(`/api/orders?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
-        setOrders(data);
+        setOrders(data.orders);
+        setPagination(data.pagination);
       }
     } catch (err) {
       console.error('Error fetching orders:', err);
@@ -702,6 +715,36 @@ export default function OrdersPage() {
           </Select>
         </FormControl>
       </Paper>
+
+      {/* Pagination Controls */}
+      {!loading && pagination.totalCount > 0 && (
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2 }}>
+          <Typography variant="body2" color="text.secondary">
+            Showing {((currentPage - 1) * ORDERS_PER_PAGE) + 1} - {Math.min(currentPage * ORDERS_PER_PAGE, pagination.totalCount)} of {pagination.totalCount} orders
+          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+            <Typography variant="body2" sx={{ px: 2 }}>
+              Page {currentPage} of {pagination.totalPages}
+            </Typography>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              disabled={!pagination.hasMore}
+            >
+              Next
+            </Button>
+          </Stack>
+        </Box>
+      )}
 
       {/* Orders Table */}
       <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto' }}>
