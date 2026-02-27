@@ -123,7 +123,14 @@ export default function OrdersPage() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({ totalCount: 0, totalPages: 1, hasMore: false });
-  const ORDERS_PER_PAGE = 20;
+  const [ordersPerPage, setOrdersPerPage] = useState(() => {
+    // Load preference from localStorage
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('ordersPerPage');
+      return saved ? parseInt(saved, 10) : 20;
+    }
+    return 20;
+  });
 
   // Notifications
   const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
@@ -263,16 +270,25 @@ export default function OrdersPage() {
     fetchColors();
   }, []);
 
-  // Fetch orders on mount and when filter or page changes
+  // Fetch orders on mount and when filter, page, or ordersPerPage changes
   useEffect(() => {
     fetchOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterStatus, currentPage]);
+  }, [filterStatus, currentPage, ordersPerPage]);
 
-  // Reset to page 1 when filter changes
+  // Reset to page 1 when filter or ordersPerPage changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterStatus]);
+  }, [filterStatus, ordersPerPage]);
+
+  // Handle orders per page change
+  function handleOrdersPerPageChange(event) {
+    const value = event.target.value;
+    setOrdersPerPage(value);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ordersPerPage', value.toString());
+    }
+  }
 
   async function fetchColors() {
     try {
@@ -305,7 +321,7 @@ export default function OrdersPage() {
       setLoading(true);
       const params = new URLSearchParams();
       params.set('page', currentPage.toString());
-      params.set('limit', ORDERS_PER_PAGE.toString());
+      params.set('limit', ordersPerPage.toString());
       
       if (filterStatus) {
         params.set('status', filterStatus);
@@ -699,28 +715,43 @@ export default function OrdersPage() {
 
       {/* Filter */}
       <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
-        <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 180 } }}>
-          <InputLabel>Status</InputLabel>
-          <Select
-            value={filterStatus}
-            label="Status"
-            onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <MenuItem value="">All Orders</MenuItem>
-            {ORDER_STATUSES.map((status) => (
-              <MenuItem key={status.value} value={status.value}>
-                {status.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 180 } }}>
+            <InputLabel>Status</InputLabel>
+            <Select
+              value={filterStatus}
+              label="Status"
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
+              <MenuItem value="">All Orders</MenuItem>
+              {ORDER_STATUSES.map((status) => (
+                <MenuItem key={status.value} value={status.value}>
+                  {status.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 150 } }}>
+            <InputLabel>Per Page</InputLabel>
+            <Select
+              value={ordersPerPage}
+              label="Per Page"
+              onChange={handleOrdersPerPageChange}
+            >
+              <MenuItem value={20}>20 per page</MenuItem>
+              <MenuItem value={30}>30 per page</MenuItem>
+              <MenuItem value={40}>40 per page</MenuItem>
+              <MenuItem value={50}>50 per page</MenuItem>
+            </Select>
+          </FormControl>
+        </Stack>
       </Paper>
 
       {/* Pagination Controls */}
       {!loading && pagination.totalCount > 0 && (
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            Showing {((currentPage - 1) * ORDERS_PER_PAGE) + 1} - {Math.min(currentPage * ORDERS_PER_PAGE, pagination.totalCount)} of {pagination.totalCount} orders
+            Showing {((currentPage - 1) * ordersPerPage) + 1} - {Math.min(currentPage * ordersPerPage, pagination.totalCount)} of {pagination.totalCount} orders
           </Typography>
           <Stack direction="row" spacing={1} alignItems="center">
             <Button
