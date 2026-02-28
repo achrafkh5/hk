@@ -34,6 +34,67 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import AddIcon from '@mui/icons-material/Add';
+import algerianWilayas from 'algeria-wilayas';
+
+// Delivery prices by wilaya
+const DELIVERY_PRICES = {
+  Adrar: { domicile: 1400, stopdesk: 1100 },
+  Chlef: { domicile: 850, stopdesk: 450 },
+  Laghouat: { domicile: 1000, stopdesk: 700 },
+  "Oum El Bouaghi": { domicile: 850, stopdesk: 500 },
+  Batna: { domicile: 850, stopdesk: 500 },
+  Béjaïa: { domicile: 850, stopdesk: 500 },
+  Biskra: { domicile: 950, stopdesk: 600 },
+  Béchar: { domicile: 1400, stopdesk: 1100 },
+  Blida: { domicile: 700, stopdesk: 450 },
+  Bouira: { domicile: 850, stopdesk: 450 },
+  Tamanrasset: { domicile: 1800, stopdesk: 1400 },
+  Tébessa: { domicile: 950, stopdesk: 600 },
+  Tlemcen: { domicile: 850, stopdesk: 500 },
+  "Tizi Ouzou": { domicile: 850, stopdesk: 450 },
+  Alger: { domicile: 500, stopdesk: 400 },
+  Djelfa: { domicile: 900, stopdesk: 600 },
+  Jijel: { domicile: 850, stopdesk: 500 },
+  Sétif: { domicile: 850, stopdesk: 450 },
+  Saïda: { domicile: 900, stopdesk: 600 },
+  Skikda: { domicile: 850, stopdesk: 500 },
+  "Sidi Bel Abbès": { domicile: 850, stopdesk: 500 },
+  Annaba: { domicile: 850, stopdesk: 500 },
+  Guelma: { domicile: 900, stopdesk: 600 },
+  Constantine: { domicile: 850, stopdesk: 450 },
+  Médéa: { domicile: 850, stopdesk: 450 },
+  Mostaganem: { domicile: 850, stopdesk: 500 },
+  "M'Sila": { domicile: 850, stopdesk: 500 },
+  Mascara: { domicile: 900, stopdesk: 600 },
+  Ouargla: { domicile: 1100, stopdesk: 800 },
+  Oran: { domicile: 850, stopdesk: 450 },
+  "El Bayadh": { domicile: 1100, stopdesk: 800 },
+  Illizi: { domicile: 2000, stopdesk: 1700 },
+  "Bordj Bou Arreridj": { domicile: 850, stopdesk: 450 },
+  Boumerdès: { domicile: 700, stopdesk: 450 },
+  "El Tarf": { domicile: 950, stopdesk: 600 },
+  Tindouf: { domicile: 1800, stopdesk: 1400 },
+  "El Oued": { domicile: 1100, stopdesk: 800 },
+  Khenchela: { domicile: 900, stopdesk: 600 },
+  "Souk Ahras": { domicile: 900, stopdesk: 600 },
+  Tipaza: { domicile: 700, stopdesk: 450 },
+  Mila: { domicile: 850, stopdesk: 500 },
+  "Aïn Defla": { domicile: 850, stopdesk: 450 },
+  Naâma: { domicile: 1100, stopdesk: 800 },
+  "Aïn Témouchent": { domicile: 900, stopdesk: 600 },
+  Ghardaïa: { domicile: 1100, stopdesk: 800 },
+  Relizane: { domicile: 850, stopdesk: 500 },
+  Timimoun: { domicile: 1400, stopdesk: 1100 },
+  "Ouled Djellal": { domicile: 1000, stopdesk: 700 },
+  "Beni Abbes": { domicile: 1400, stopdesk: 1100 },
+  "In Salah": { domicile: 1400, stopdesk: 1100 },
+  "In Guezzam": { domicile: 2000, stopdesk: 1700 },
+  Touggourt: { domicile: 1100, stopdesk: 800 },
+  Djanet: { domicile: 2000, stopdesk: 1700 },
+  "El M'Ghair": { domicile: 1100, stopdesk: 800 },
+  "El Meniaa": { domicile: 1300, stopdesk: 1000 }
+};
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import NotificationsOffIcon from '@mui/icons-material/NotificationsOff';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
@@ -105,6 +166,7 @@ function getProductName(name) {
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [colors, setColors] = useState([]);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -116,6 +178,16 @@ export default function OrdersPage() {
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [error, setError] = useState('');
   const [orderProducts, setOrderProducts] = useState({}); // Store product details by productId
+
+  // Add Order Dialog
+  const [addOrderDialogOpen, setAddOrderDialogOpen] = useState(false);
+  const [newOrderData, setNewOrderData] = useState({
+    customer: { name: '', phone: '', wilaya: '', commune: '', address: '' },
+    deliveryType: 'stopdesk',
+    deliveryPrice: 0,
+    items: [{ productId: '', name: '', price: 0, qty: 1, size: '', color: '' }]
+  });
+  const [communes, setCommunes] = useState([]);
 
   // Filter
   const [filterStatus, setFilterStatus] = useState('');
@@ -265,9 +337,10 @@ export default function OrdersPage() {
     }
   }
 
-  // Fetch colors on mount
+  // Fetch colors and products on mount
   useEffect(() => {
     fetchColors();
+    fetchProducts();
   }, []);
 
   // Fetch orders on mount and when filter, page, or ordersPerPage changes
@@ -299,6 +372,18 @@ export default function OrdersPage() {
       }
     } catch (err) {
       console.error('Error fetching colors:', err);
+    }
+  }
+
+  async function fetchProducts() {
+    try {
+      const res = await fetch('/api/products?active=true');
+      if (res.ok) {
+        const data = await res.json();
+        setProducts(data);
+      }
+    } catch (err) {
+      console.error('Error fetching products:', err);
     }
   }
 
@@ -538,11 +623,210 @@ export default function OrdersPage() {
     }
   }
 
+  // Add Order Dialog Handlers
+  function handleOpenAddOrderDialog() {
+    setNewOrderData({
+      customer: { name: '', phone: '', wilaya: '', commune: '', address: '' },
+      deliveryType: 'stopdesk',
+      deliveryPrice: 0,
+      items: [{ productId: '', name: '', price: 0, qty: 1, size: '', color: '' }]
+    });
+    setCommunes([]);
+    setError('');
+    setAddOrderDialogOpen(true);
+  }
+
+  function handleCloseAddOrderDialog() {
+    setAddOrderDialogOpen(false);
+    setNewOrderData({
+      customer: { name: '', phone: '', wilaya: '', commune: '', address: '' },
+      deliveryType: 'stopdesk',
+      deliveryPrice: 0,
+      items: [{ productId: '', name: '', price: 0, qty: 1, size: '', color: '' }]
+    });
+    setCommunes([]);
+    setError('');
+  }
+
+  function handleNewOrderCustomerChange(field, value) {
+    const updatedCustomer = { ...newOrderData.customer, [field]: value };
+    
+    // Handle wilaya change - update communes and delivery price
+    if (field === 'wilaya') {
+      if (value) {
+        // Load ALL communes from all dairas of that wilaya (same as checkout page)
+        const wilayaDairas = algerianWilayas.getDairasByWilaya(value);
+        const allCommunes = [];
+        wilayaDairas.forEach(daira => {
+          const dairaCommunes = algerianWilayas.getCommunesByDaira(daira.id);
+          allCommunes.push(...dairaCommunes);
+        });
+        // Sort communes alphabetically
+        allCommunes.sort((a, b) => (a.commune_name_ascii || '').localeCompare(b.commune_name_ascii || ''));
+        setCommunes(allCommunes);
+        updatedCustomer.commune = '';
+        
+        // Update delivery price
+        const wilayaName = algerianWilayas.getWilayaName(value, 'ascii');
+        const prices = DELIVERY_PRICES[wilayaName];
+        if (prices) {
+          const deliveryPrice = prices[newOrderData.deliveryType] || 0;
+          setNewOrderData(prev => ({
+            ...prev,
+            customer: updatedCustomer,
+            deliveryPrice
+          }));
+          return;
+        }
+      } else {
+        setCommunes([]);
+        updatedCustomer.commune = '';
+      }
+    }
+    
+    setNewOrderData(prev => ({
+      ...prev,
+      customer: updatedCustomer
+    }));
+  }
+
+  function handleNewOrderDeliveryTypeChange(value) {
+    let deliveryPrice = 0;
+    if (newOrderData.customer.wilaya) {
+      const wilayaName = algerianWilayas.getWilayaName(newOrderData.customer.wilaya, 'ascii');
+      const prices = DELIVERY_PRICES[wilayaName];
+      if (prices) {
+        deliveryPrice = prices[value] || 0;
+      }
+    }
+    setNewOrderData(prev => ({
+      ...prev,
+      deliveryType: value,
+      deliveryPrice
+    }));
+  }
+
+  function handleNewOrderItemChange(index, field, value) {
+    const newItems = [...newOrderData.items];
+    
+    if (field === 'productId') {
+      const product = products.find(p => p._id === value);
+      if (product) {
+        newItems[index] = {
+          ...newItems[index],
+          productId: value,
+          name: product.name,
+          price: product.salePrice || product.price,
+          size: '',
+          color: ''
+        };
+      }
+    } else {
+      newItems[index] = {
+        ...newItems[index],
+        [field]: field === 'qty' || field === 'price' ? parseFloat(value) || 0 : value
+      };
+    }
+    
+    setNewOrderData(prev => ({
+      ...prev,
+      items: newItems
+    }));
+  }
+
+  function handleAddNewOrderItem() {
+    setNewOrderData(prev => ({
+      ...prev,
+      items: [...prev.items, { productId: '', name: '', price: 0, qty: 1, size: '', color: '' }]
+    }));
+  }
+
+  function handleRemoveNewOrderItem(index) {
+    if (newOrderData.items.length === 1) {
+      setError('Order must have at least one item');
+      return;
+    }
+    setNewOrderData(prev => ({
+      ...prev,
+      items: prev.items.filter((_, i) => i !== index)
+    }));
+  }
+
+  function calculateNewOrderTotal() {
+    const subtotal = newOrderData.items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    return subtotal + (newOrderData.deliveryPrice || 0);
+  }
+
+  async function handleCreateOrder() {
+    // Validation
+    if (!newOrderData.customer.name) {
+      setError('Customer name is required');
+      return;
+    }
+    if (!newOrderData.customer.phone) {
+      setError('Customer phone is required');
+      return;
+    }
+    if (!newOrderData.customer.wilaya || !newOrderData.customer.commune) {
+      setError('Customer location (wilaya, commune) is required');
+      return;
+    }
+    if (newOrderData.items.length === 0 || !newOrderData.items[0].productId) {
+      setError('At least one product is required');
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+
+    const subtotal = newOrderData.items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    const total = subtotal + (newOrderData.deliveryPrice || 0);
+
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: newOrderData.items,
+          subtotal,
+          deliveryPrice: newOrderData.deliveryPrice,
+          deliveryType: newOrderData.deliveryType,
+          total,
+          customer: newOrderData.customer,
+          isAdminOrder: true  // Mark as admin order - won't count for Meta pixel
+        }),
+      });
+
+      if (res.ok) {
+        handleCloseAddOrderDialog();
+        fetchOrders();
+      } else {
+        const data = await res.json();
+        setError(data.error || 'Failed to create order');
+      }
+    } catch (err) {
+      console.error('Error creating order:', err);
+      setError('Failed to create order');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <Box>
       {/* Page Header */}
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-        <Typography variant="h5">Orders</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Typography variant="h5">Orders</Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleOpenAddOrderDialog}
+            size="small"
+          >
+            Add Order
+          </Button>
+        </Box>
         
         {/* Notification Controls */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
@@ -1306,6 +1590,247 @@ export default function OrdersPage() {
             disabled={saving}
           >
             {saving ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Order Dialog */}
+      <Dialog
+        open={addOrderDialogOpen}
+        onClose={handleCloseAddOrderDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Add New Order (Admin)</DialogTitle>
+        <DialogContent>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2, mt: 1 }}>
+              {error}
+            </Alert>
+          )}
+          
+          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2, mt: 1 }}>
+            This order will be marked as admin-created and won&apos;t count for Meta pixel tracking.
+          </Typography>
+
+          <Divider sx={{ my: 2 }} />
+          
+          {/* Customer Information */}
+          <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>
+            Customer Information
+          </Typography>
+          <Stack spacing={2} sx={{ mb: 3 }}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <TextField
+                fullWidth
+                label="Customer Name"
+                value={newOrderData.customer.name}
+                onChange={(e) => handleNewOrderCustomerChange('name', e.target.value)}
+                required
+              />
+              <TextField
+                fullWidth
+                label="Phone Number"
+                value={newOrderData.customer.phone}
+                onChange={(e) => handleNewOrderCustomerChange('phone', e.target.value)}
+                required
+              />
+            </Stack>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+              <FormControl fullWidth required>
+                <InputLabel>Wilaya</InputLabel>
+                <Select
+                  value={newOrderData.customer.wilaya}
+                  label="Wilaya"
+                  onChange={(e) => handleNewOrderCustomerChange('wilaya', e.target.value)}
+                >
+                  {algerianWilayas.getAllWilayas().map((wilaya) => (
+                    <MenuItem key={wilaya.code} value={wilaya.code}>
+                      {wilaya.code} - {wilaya.name.ascii}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl fullWidth required disabled={!newOrderData.customer.wilaya}>
+                <InputLabel>Commune</InputLabel>
+                <Select
+                  value={newOrderData.customer.commune}
+                  label="Commune"
+                  onChange={(e) => handleNewOrderCustomerChange('commune', e.target.value)}
+                >
+                  {communes.map((commune) => (
+                    <MenuItem key={commune.id} value={commune.id}>
+                      {commune.commune_name_ascii}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Stack>
+            <TextField
+              fullWidth
+              label="Address (optional)"
+              value={newOrderData.customer.address}
+              onChange={(e) => handleNewOrderCustomerChange('address', e.target.value)}
+              multiline
+              rows={2}
+            />
+          </Stack>
+
+          <Divider sx={{ my: 2 }} />
+          
+          {/* Delivery */}
+          <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>
+            Delivery
+          </Typography>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 3 }}>
+            <FormControl fullWidth>
+              <InputLabel>Delivery Type</InputLabel>
+              <Select
+                value={newOrderData.deliveryType}
+                label="Delivery Type"
+                onChange={(e) => handleNewOrderDeliveryTypeChange(e.target.value)}
+              >
+                <MenuItem value="domicile">Domicile (Home)</MenuItem>
+                <MenuItem value="stopdesk">Stop Desk</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              fullWidth
+              label="Delivery Price (DA)"
+              type="number"
+              value={newOrderData.deliveryPrice}
+              onChange={(e) => setNewOrderData(prev => ({ ...prev, deliveryPrice: parseFloat(e.target.value) || 0 }))}
+              InputProps={{ readOnly: true }}
+            />
+          </Stack>
+
+          <Divider sx={{ my: 2 }} />
+          
+          {/* Order Items */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="subtitle1" fontWeight="bold">
+              Order Items
+            </Typography>
+            <Button
+              size="small"
+              startIcon={<AddIcon />}
+              onClick={handleAddNewOrderItem}
+            >
+              Add Item
+            </Button>
+          </Box>
+          
+          {newOrderData.items.map((item, index) => {
+            const selectedProduct = products.find(p => p._id === item.productId);
+            return (
+              <Paper key={index} variant="outlined" sx={{ p: 2, mb: 2 }}>
+                <Stack spacing={2}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+                    <FormControl fullWidth required>
+                      <InputLabel>Product</InputLabel>
+                      <Select
+                        value={item.productId}
+                        label="Product"
+                        onChange={(e) => handleNewOrderItemChange(index, 'productId', e.target.value)}
+                      >
+                        {products.map((product) => (
+                          <MenuItem key={product._id} value={product._id}>
+                            {getProductName(product.name)} - {formatPrice(product.salePrice || product.price)}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <IconButton
+                      color="error"
+                      onClick={() => handleRemoveNewOrderItem(index)}
+                      disabled={newOrderData.items.length === 1}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Stack>
+                  
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                    <TextField
+                      label="Quantity"
+                      type="number"
+                      value={item.qty}
+                      onChange={(e) => handleNewOrderItemChange(index, 'qty', e.target.value)}
+                      InputProps={{ inputProps: { min: 1 } }}
+                      sx={{ width: { xs: '100%', sm: 120 } }}
+                    />
+                    <TextField
+                      label="Price (DA)"
+                      type="number"
+                      value={item.price}
+                      onChange={(e) => handleNewOrderItemChange(index, 'price', e.target.value)}
+                      sx={{ width: { xs: '100%', sm: 150 } }}
+                    />
+                    {selectedProduct?.hasSize && (
+                      <FormControl sx={{ width: { xs: '100%', sm: 120 } }}>
+                        <InputLabel>Size</InputLabel>
+                        <Select
+                          value={item.size || ''}
+                          label="Size"
+                          onChange={(e) => handleNewOrderItemChange(index, 'size', e.target.value)}
+                        >
+                          {selectedProduct.sizes?.map((size) => (
+                            <MenuItem key={size} value={size}>{size}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    )}
+                    {selectedProduct?.colors?.length > 0 && (
+                      <FormControl sx={{ width: { xs: '100%', sm: 150 } }}>
+                        <InputLabel>Color</InputLabel>
+                        <Select
+                          value={item.color || ''}
+                          label="Color"
+                          onChange={(e) => handleNewOrderItemChange(index, 'color', e.target.value)}
+                        >
+                          {selectedProduct.colors.map((colorId) => (
+                            <MenuItem key={colorId} value={colorId}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box
+                                  sx={{
+                                    width: 16,
+                                    height: 16,
+                                    borderRadius: '50%',
+                                    bgcolor: getColorById(colorId)?.hex || '#ccc',
+                                    border: '1px solid #ccc'
+                                  }}
+                                />
+                                {getColorName(colorId)}
+                              </Box>
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    )}
+                  </Stack>
+                </Stack>
+              </Paper>
+            );
+          })}
+
+          <Divider sx={{ my: 2 }} />
+          
+          {/* Total */}
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Typography variant="h6">
+              Total: {formatPrice(calculateNewOrderTotal())}
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseAddOrderDialog} disabled={saving}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleCreateOrder}
+            disabled={saving}
+          >
+            {saving ? 'Creating...' : 'Create Order'}
           </Button>
         </DialogActions>
       </Dialog>
