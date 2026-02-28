@@ -1,16 +1,24 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 
-// Helper function to format dates
+// Helper function to format dates (Algerian time - GMT+1)
 function formatDate(date) {
   if (!date) return null;
-  return new Date(date).toLocaleDateString('en-US', {
+  return new Date(date).toLocaleDateString('en-GB', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    timeZone: 'Africa/Algiers'
   });
+}
+
+// Helper function to get English product name
+function getEnglishName(name) {
+  if (!name) return '-';
+  if (typeof name === 'string') return name;
+  return name.en || name.fr || name.ar || '-';
 }
 
 // Format user object with readable dates
@@ -55,9 +63,9 @@ export async function POST(request) {
     // Prepare product click history entry for order_now
     const productClickEntry = clickType === 'order_now' && extraData ? {
       productId: extraData.productId,
-      productName: extraData.productName,
+      productName: getEnglishName(extraData.productName),
       price: extraData.price,
-      color: extraData.color,
+      color: getEnglishName(extraData.color),
       size: extraData.size,
       clickedAt: new Date()
     } : null;
