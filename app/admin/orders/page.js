@@ -35,6 +35,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import algerianWilayas from 'algeria-wilayas';
 
 // Delivery prices by wilaya
@@ -826,6 +827,16 @@ export default function OrdersPage() {
           >
             Add Order
           </Button>
+          <Tooltip title="Refresh orders">
+            <IconButton
+              onClick={fetchOrders}
+              size="small"
+              color="primary"
+              disabled={loading}
+            >
+              <RefreshIcon />
+            </IconButton>
+          </Tooltip>
         </Box>
         
         {/* Notification Controls */}
