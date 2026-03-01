@@ -1765,7 +1765,7 @@ export default function OrdersPage() {
                       onChange={(e) => handleNewOrderItemChange(index, 'price', e.target.value)}
                       sx={{ width: { xs: '100%', sm: 150 } }}
                     />
-                    {selectedProduct?.hasSize && (
+                    {selectedProduct?.hasSize && selectedProduct?.sizes?.length > 0 && (
                       <FormControl sx={{ width: { xs: '100%', sm: 120 } }}>
                         <InputLabel>Size</InputLabel>
                         <Select
@@ -1773,9 +1773,12 @@ export default function OrdersPage() {
                           label="Size"
                           onChange={(e) => handleNewOrderItemChange(index, 'size', e.target.value)}
                         >
-                          {selectedProduct.sizes?.map((size) => (
-                            <MenuItem key={size} value={size}>{size}</MenuItem>
-                          ))}
+                          {selectedProduct.sizes.map((size, sizeIndex) => {
+                            const sizeValue = typeof size === 'object' ? size.value || size.name || JSON.stringify(size) : size;
+                            return (
+                              <MenuItem key={`size-${sizeIndex}-${sizeValue}`} value={sizeValue}>{sizeValue}</MenuItem>
+                            );
+                          })}
                         </Select>
                       </FormControl>
                     )}
