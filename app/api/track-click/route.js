@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
+import { ObjectId } from 'mongodb';
 
 // Helper function to format dates (Algerian time - GMT+1)
 function formatDate(date) {
@@ -22,17 +23,68 @@ function getEnglishName(name) {
 }
 
 // Format user object with readable dates and English names
-function formatUserDates(user) {
+async function formatUserDates(user, db) {
+  // Process orderNowProducts to convert to English
+  const processedProducts = [];
+  if (user.orderNowProducts && user.orderNowProducts.length > 0) {
+    for (const product of user.orderNowProducts) {
+      let productName = product.productName;
+      let colorName = product.color;
+      
+      try {
+        // Fetch product details to get English name
+        if (product.productId) {
+          const productData = await db.collection('products').findOne({ 
+            _id: ObjectId.isValid(product.productId) ? new ObjectId(product.productId) : product.productId 
+          });
+          if (productData) {
+            productName = getEnglishName(productData.name);
+          }
+        }
+        
+        // Fetch color details to get English name
+        if (product.color) {
+          // Try to find color by ID first
+          let colorData = null;
+          if (ObjectId.isValid(product.color)) {
+            colorData = await db.collection('colors').findOne({ 
+              _id: new ObjectId(product.color)
+            });
+          }
+          
+          // If not found by ID, try to find by name (in any language)
+          if (!colorData) {
+            colorData = await db.collection('colors').findOne({ 
+              $or: [
+                { 'name.en': product.color },
+                { 'name.fr': product.color },
+                { 'name.ar': product.color }
+              ]
+            });
+          }
+          
+          if (colorData) {
+            colorName = getEnglishName(colorData.name);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching product/color:', error);
+      }
+      
+      processedProducts.push({
+        ...product,
+        productName,
+        color: colorName,
+        clickedAt: formatDate(product.clickedAt)
+      });
+    }
+  }
+  
   return {
     ...user,
     createdAt: formatDate(user.createdAt),
     lastActivity: formatDate(user.lastActivity),
-    orderNowProducts: user.orderNowProducts?.map(product => ({
-      ...product,
-      productName: getEnglishName(product.productName),
-      color: getEnglishName(product.color),
-      clickedAt: formatDate(product.clickedAt)
-    })) || []
+    orderNowProducts: processedProducts
   };
 }
 
@@ -63,14 +115,62 @@ export async function POST(request) {
     const existingUser = await usersCollection.findOne({ ip });
 
     // Prepare product click history entry for order_now
-    const productClickEntry = clickType === 'order_now' && extraData ? {
-      productId: extraData.productId,
-      productName: getEnglishName(extraData.productName),
-      price: extraData.price,
-      color: getEnglishName(extraData.color),
-      size: extraData.size,
-      clickedAt: new Date()
-    } : null;
+    let productClickEntry = null;
+    if (clickType === 'order_now' && extraData) {
+      // Fetch product and color from database to get English names
+      let productName = getEnglishName(extraData.productName);
+      let colorName = getEnglishName(extraData.color);
+      
+      try {
+        // Fetch product from database
+        if (extraData.productId) {
+          const product = await db.collection('products').findOne({ 
+            _id: ObjectId.isValid(extraData.productId) ? new ObjectId(extraData.productId) : extraData.productId 
+          });
+          if (product) {
+            productName = getEnglishName(product.name);
+          }
+        }
+        
+        // Fetch color from database if colorId is provided
+        if (extraData.color) {
+          // Try to find color by ID first
+          let color = null;
+          if (ObjectId.isValid(extraData.color)) {
+            color = await db.collection('colors').findOne({ 
+              _id: new ObjectId(extraData.color)
+            });
+          }
+          
+          // If not found by ID, try to find by name (in any language)
+          if (!color) {
+            color = await db.collection('colors').findOne({ 
+              $or: [
+                { 'name.en': extraData.color },
+                { 'name.fr': extraData.color },
+                { 'name.ar': extraData.color }
+              ]
+            });
+          }
+          
+          if (color) {
+            colorName = getEnglishName(color.name);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching product/color details:', error);
+        // Continue with the names we have
+      }
+      
+      productClickEntry = {
+        productId: extraData.productId,
+        productName,
+        price: extraData.price,
+        color: colorName,
+        size: extraData.size,
+        clickedAt: new Date()
+      };
+    }
 
     if (existingUser) {
       // Update existing user - increment the click count for this type
@@ -151,14 +251,21 @@ export async function GET(request) {
           { status: 404 }
         );
       }
-      return NextResponse.json(formatUserDates(user));
+      const formattedUser = await formatUserDates(user, db);
+      return NextResponse.json(formattedUser);
     } else {
       // Get all users
       const users = await usersCollection
         .find({})
         .sort({ lastActivity: -1 })
         .toArray();
-      return NextResponse.json(users.map(formatUserDates));
+      
+      // Format all users with English names
+      const formattedUsers = await Promise.all(
+        users.map(user => formatUserDates(user, db))
+      );
+      
+      return NextResponse.json(formattedUsers);
     }
   } catch (error) {
     console.error('Error fetching user clicks:', error);
