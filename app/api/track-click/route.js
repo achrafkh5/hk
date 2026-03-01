@@ -21,7 +21,7 @@ function getEnglishName(name) {
   return name.en || name.fr || name.ar || '-';
 }
 
-// Format user object with readable dates
+// Format user object with readable dates and English names
 function formatUserDates(user) {
   return {
     ...user,
@@ -29,6 +29,8 @@ function formatUserDates(user) {
     lastActivity: formatDate(user.lastActivity),
     orderNowProducts: user.orderNowProducts?.map(product => ({
       ...product,
+      productName: getEnglishName(product.productName),
+      color: getEnglishName(product.color),
       clickedAt: formatDate(product.clickedAt)
     })) || []
   };
