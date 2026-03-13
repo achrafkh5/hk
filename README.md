@@ -1,7 +1,7 @@
 # HK Lux E-commerce Store
 
 A modern, full-featured e-commerce platform built with Next.js 16, designed for selling clothing and accessories with multilingual support (English, French, Arabic).
- 
+
 ## 🚀 Features
 
 ### Customer Features
